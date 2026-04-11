@@ -1,0 +1,37 @@
+{
+  "total_validated": 6,
+  "total_found": 6,
+  "total_interacted": 6,
+  "results": [
+    {
+      "element_name": "S001_Add_Element_0",
+      "found": true,
+      "interacted": true
+    },
+    {
+      "element_name": "S002_checkbox_1_0",
+      "found": true,
+      "interacted": true
+    },
+    {
+      "element_name": "S002_checkbox_2_1",
+      "found": true,
+      "interacted": true
+    },
+    {
+      "element_name": "S003_Dropdown_0",
+      "found": true,
+      "interacted": true
+    },
+    {
+      "element_name": "S004_Number_Input_0",
+      "found": true,
+      "interacted": true
+    },
+    {
+      "element_name": "S005_Input_Field_0",
+      "found": true,
+      "interacted": true
+    }
+  ]
+}

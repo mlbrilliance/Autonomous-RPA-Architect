@@ -1,0 +1,80 @@
+{
+  "S001_Add_Element_0": {
+    "selector_xml": "<html app='chrome.exe' /><webctrl tag='button' innertext='Add Element' />",
+    "stability_score": 0.6,
+    "match_method": "heuristic_text",
+    "match_confidence": 0.7,
+    "source_element": {
+      "tag": "button",
+      "id": "",
+      "name": "",
+      "aria_label": "",
+      "inner_text": "Add Element"
+    }
+  },
+  "S002_checkbox_1_0": {
+    "selector_xml": "<html app='chrome.exe' /><webctrl tag='input' type='checkbox' />",
+    "stability_score": 0.3,
+    "match_method": "enhanced_ordinal",
+    "match_confidence": 0.75,
+    "source_element": {
+      "tag": "input",
+      "id": "",
+      "name": "",
+      "aria_label": "",
+      "inner_text": ""
+    }
+  },
+  "S002_checkbox_2_1": {
+    "selector_xml": "<html app='chrome.exe' /><webctrl tag='input' type='checkbox' />",
+    "stability_score": 0.3,
+    "match_method": "enhanced_single_candidate",
+    "match_confidence": 0.7,
+    "source_element": {
+      "tag": "input",
+      "id": "",
+      "name": "",
+      "aria_label": "",
+      "inner_text": ""
+    }
+  },
+  "S003_Dropdown_0": {
+    "selector_xml": "<html app='chrome.exe' /><webctrl tag='select' id='dropdown' />",
+    "stability_score": 0.95,
+    "match_method": "heuristic_id",
+    "match_confidence": 0.95,
+    "source_element": {
+      "tag": "select",
+      "id": "dropdown",
+      "name": "",
+      "aria_label": "",
+      "inner_text": "Please select an option\nOption 1\nOption 2"
+    }
+  },
+  "S004_Number_Input_0": {
+    "selector_xml": "<html app='chrome.exe' /><webctrl tag='input' type='number' />",
+    "stability_score": 0.3,
+    "match_method": "enhanced_single_candidate",
+    "match_confidence": 0.7,
+    "source_element": {
+      "tag": "input",
+      "id": "",
+      "name": "",
+      "aria_label": "",
+      "inner_text": ""
+    }
+  },
+  "S005_Input_Field_0": {
+    "selector_xml": "<html app='chrome.exe' /><webctrl tag='input' id='target' type='text' />",
+    "stability_score": 0.95,
+    "match_method": "enhanced_single_candidate",
+    "match_confidence": 0.7,
+    "source_element": {
+      "tag": "input",
+      "id": "target",
+      "name": "",
+      "aria_label": "",
+      "inner_text": ""
+    }
+  }
+}

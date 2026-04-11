@@ -1,0 +1,144 @@
+{
+  "process_name": "TheInternetAutomation",
+  "process_type": "transactional",
+  "description": "End-to-end proof: automate interactions on the-internet.herokuapp.com",
+  "systems": [
+    {
+      "name": "TheInternet",
+      "type": "web",
+      "url": "https://the-internet.herokuapp.com",
+      "login_required": false
+    }
+  ],
+  "credentials": [],
+  "transactions": [
+    {
+      "name": "InteractWithTestPages",
+      "input_contract": null,
+      "output_contract": null,
+      "steps": [
+        {
+          "id": "S001",
+          "type": "navigate",
+          "system_ref": "TheInternet",
+          "actions": [
+            {
+              "action": "click",
+              "target": "Add Element",
+              "value": null,
+              "selector_hint": null,
+              "confidence": 0.5
+            }
+          ],
+          "parameters": {
+            "url": "https://the-internet.herokuapp.com/add_remove_elements/"
+          },
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Click Add Element button"
+        },
+        {
+          "id": "S002",
+          "type": "ui_flow",
+          "system_ref": "TheInternet",
+          "actions": [
+            {
+              "action": "check",
+              "target": "checkbox 1",
+              "value": null,
+              "selector_hint": null,
+              "confidence": 0.5
+            },
+            {
+              "action": "check",
+              "target": "checkbox 2",
+              "value": null,
+              "selector_hint": null,
+              "confidence": 0.5
+            }
+          ],
+          "parameters": {
+            "url": "https://the-internet.herokuapp.com/checkboxes"
+          },
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Toggle checkboxes"
+        },
+        {
+          "id": "S003",
+          "type": "ui_flow",
+          "system_ref": "TheInternet",
+          "actions": [
+            {
+              "action": "select_item",
+              "target": "Dropdown",
+              "value": "Option 1",
+              "selector_hint": null,
+              "confidence": 0.5
+            }
+          ],
+          "parameters": {
+            "url": "https://the-internet.herokuapp.com/dropdown"
+          },
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Select dropdown option"
+        },
+        {
+          "id": "S004",
+          "type": "ui_flow",
+          "system_ref": "TheInternet",
+          "actions": [
+            {
+              "action": "type_into",
+              "target": "Number Input",
+              "value": "42",
+              "selector_hint": null,
+              "confidence": 0.5
+            }
+          ],
+          "parameters": {
+            "url": "https://the-internet.herokuapp.com/inputs"
+          },
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Type into number input"
+        },
+        {
+          "id": "S005",
+          "type": "ui_flow",
+          "system_ref": "TheInternet",
+          "actions": [
+            {
+              "action": "type_into",
+              "target": "Input Field",
+              "value": "Hello World",
+              "selector_hint": null,
+              "confidence": 0.5
+            },
+            {
+              "action": "get_text",
+              "target": "Result",
+              "value": null,
+              "selector_hint": null,
+              "confidence": 0.5
+            }
+          ],
+          "parameters": {
+            "url": "https://the-internet.herokuapp.com/key_presses"
+          },
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Type text and read result"
+        }
+      ],
+      "business_rules": []
+    }
+  ],
+  "config": {
+    "MaxRetryNumber": "3",
+    "LogLevel": "Info"
+  },
+  "exception_categories": [],
+  "metadata": {}
+}

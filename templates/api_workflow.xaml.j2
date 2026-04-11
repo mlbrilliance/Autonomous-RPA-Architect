@@ -1,0 +1,40 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="{{ workflow_name }}"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Sequence DisplayName="{{ display_name | default('API Workflow') }}">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="responseBody" />
+      <Variable x:TypeArguments="x:Int32" Name="statusCode" />
+    </Sequence.Variables>
+    <ui:LogMessage DisplayName="Log Start" Level="Info"
+      Message="[String.Format(&quot;Starting API call to {{ endpoint }}&quot;)]" />
+    <ui:HttpClient DisplayName="HTTP {{ method | default('GET') }}"
+      Method="{{ method | default('GET') }}"
+      EndPoint="{{ endpoint }}"
+      BodyFormat="application/json"
+      {% if body %}Body="{{ body }}"{% endif %}
+      Result="[responseBody]"
+      StatusCode="[statusCode]">
+      {% if headers %}
+      <ui:HttpClient.Headers>
+        {% for header in headers %}
+        <ui:HttpHeader Key="{{ header.key }}" Value="{{ header.value }}" />
+        {% endfor %}
+      </ui:HttpClient.Headers>
+      {% endif %}
+    </ui:HttpClient>
+    <If Condition="[statusCode &lt; 200 OrElse statusCode &gt;= 300]">
+      <If.Then>
+        <Throw DisplayName="Throw API Error"
+          Exception="[New System.Exception(String.Format(&quot;API call failed with status {0}: {1}&quot;, statusCode, responseBody))]" />
+      </If.Then>
+    </If>
+    <ui:LogMessage DisplayName="Log Success" Level="Info"
+      Message="[String.Format(&quot;API call completed with status {0}&quot;, statusCode)]" />
+  </Sequence>
+</Activity>

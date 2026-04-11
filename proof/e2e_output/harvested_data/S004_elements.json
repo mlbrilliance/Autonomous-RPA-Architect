@@ -1,0 +1,74 @@
+{
+  "step_id": "S004",
+  "elements": [
+    {
+      "tag": "a",
+      "id": "",
+      "name": "",
+      "classes": [],
+      "aria_label": "",
+      "aria_role": "",
+      "inner_text": "",
+      "placeholder": "",
+      "input_type": "",
+      "data_testid": "",
+      "xpath": "",
+      "css_selector": "",
+      "bounding_box": {
+        "x": 1460,
+        "y": 32,
+        "width": 0,
+        "height": 0
+      },
+      "page_url": "https://the-internet.herokuapp.com/inputs",
+      "accessibility_name": ""
+    },
+    {
+      "tag": "input",
+      "id": "",
+      "name": "",
+      "classes": [],
+      "aria_label": "",
+      "aria_role": "",
+      "inner_text": "",
+      "placeholder": "",
+      "input_type": "number",
+      "data_testid": "",
+      "xpath": "",
+      "css_selector": "",
+      "bounding_box": {
+        "x": 725,
+        "y": 134.28125,
+        "width": 470,
+        "height": 32.375
+      },
+      "page_url": "https://the-internet.herokuapp.com/inputs",
+      "accessibility_name": ""
+    },
+    {
+      "tag": "a",
+      "id": "",
+      "name": "",
+      "classes": [],
+      "aria_label": "",
+      "aria_role": "",
+      "inner_text": "Elemental Selenium",
+      "placeholder": "",
+      "input_type": "",
+      "data_testid": "",
+      "xpath": "",
+      "css_selector": "",
+      "bounding_box": {
+        "x": 933.3125,
+        "y": 219.65625,
+        "width": 142.296875,
+        "height": 17
+      },
+      "page_url": "https://the-internet.herokuapp.com/inputs",
+      "accessibility_name": ""
+    }
+  ],
+  "screenshot_path": "/home/claude/autonomous-rpa-architect/proof/e2e_output/screenshots/TheInternet/S004.png",
+  "page_url": "https://the-internet.herokuapp.com/inputs",
+  "errors": []
+}

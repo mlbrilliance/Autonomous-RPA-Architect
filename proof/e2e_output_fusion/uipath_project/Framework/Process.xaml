@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Sequence DisplayName="Process Transaction">
+<ui:LogMessage Level="Info" Message="Starting transaction processing" DisplayName="Log Start Processing" sap2010:WorkflowViewState.IdRef="LogMessage_d" />
+    <ui:NClick ClickType="CLICK_SINGLE" MouseButton="BTN_LEFT" DelayAfter="300" DelayBefore="200" DisplayName="Click Add Element" TimeoutMS="30000" sap2010:WorkflowViewState.IdRef="NClick_1">
+      <ui:NClick.Target>
+        <ui:Target WaitForReady="INTERACTIVE" Timeout="3000" Selector="&lt;html app=&#x27;chrome.exe&#x27; /&gt;&lt;webctrl tag=&#x27;button&#x27; innertext=&#x27;Add Element&#x27; /&gt;" sap2010:WorkflowViewState.IdRef="Target_2" />
+      </ui:NClick.Target>
+    </ui:NClick>
+    <ui:NCheck Action="Check" DisplayName="Check checkbox 1" sap2010:WorkflowViewState.IdRef="NCheck_3">
+      <ui:NCheck.Target>
+        <ui:Target WaitForReady="INTERACTIVE" Timeout="3000" Selector="&lt;html app=&#x27;chrome.exe&#x27; /&gt;&lt;webctrl tag=&#x27;input&#x27; type=&#x27;checkbox&#x27; /&gt;" sap2010:WorkflowViewState.IdRef="Target_4" />
+      </ui:NCheck.Target>
+    </ui:NCheck>
+    <ui:NCheck Action="Check" DisplayName="Check checkbox 2" sap2010:WorkflowViewState.IdRef="NCheck_5">
+      <ui:NCheck.Target>
+        <ui:Target WaitForReady="INTERACTIVE" Timeout="3000" Selector="&lt;html app=&#x27;chrome.exe&#x27; /&gt;&lt;webctrl tag=&#x27;input&#x27; type=&#x27;checkbox&#x27; /&gt;" sap2010:WorkflowViewState.IdRef="Target_6" />
+      </ui:NCheck.Target>
+    </ui:NCheck>
+    <ui:NSelectItem Item="Option 1" DisplayName="Select Dropdown" sap2010:WorkflowViewState.IdRef="NSelectItem_7">
+      <ui:NSelectItem.Target>
+        <ui:Target WaitForReady="INTERACTIVE" Timeout="3000" Selector="&lt;html app=&#x27;chrome.exe&#x27; /&gt;&lt;webctrl tag=&#x27;select&#x27; id=&#x27;dropdown&#x27; /&gt;" sap2010:WorkflowViewState.IdRef="Target_8" />
+      </ui:NSelectItem.Target>
+    </ui:NSelectItem>
+    <ui:NTypeInto ClickBeforeTyping="True" EmptyField="SingleSpace" Text="42" DelayAfter="200" DelayBefore="200" DelayBetweenKeys="10" DisplayName="Type Into Number Input" sap2010:WorkflowViewState.IdRef="NTypeInto_9">
+      <ui:NTypeInto.Target>
+        <ui:Target WaitForReady="INTERACTIVE" Timeout="3000" Selector="&lt;html app=&#x27;chrome.exe&#x27; /&gt;&lt;webctrl tag=&#x27;input&#x27; type=&#x27;number&#x27; /&gt;" sap2010:WorkflowViewState.IdRef="Target_a" />
+      </ui:NTypeInto.Target>
+    </ui:NTypeInto>
+    <ui:NTypeInto ClickBeforeTyping="True" EmptyField="SingleSpace" Text="Hello World" DelayAfter="200" DelayBefore="200" DelayBetweenKeys="10" DisplayName="Type Into Input Field" sap2010:WorkflowViewState.IdRef="NTypeInto_b">
+      <ui:NTypeInto.Target>
+        <ui:Target WaitForReady="INTERACTIVE" Timeout="3000" Selector="&lt;html app=&#x27;chrome.exe&#x27; /&gt;&lt;webctrl tag=&#x27;input&#x27; id=&#x27;target&#x27; type=&#x27;text&#x27; /&gt;" sap2010:WorkflowViewState.IdRef="Target_c" />
+      </ui:NTypeInto.Target>
+    </ui:NTypeInto>
+<ui:LogMessage Level="Info" Message="Transaction processing completed" DisplayName="Log End Processing" sap2010:WorkflowViewState.IdRef="LogMessage_e" />
+  </Sequence>
+</Activity>

@@ -1,0 +1,54 @@
+{
+  "aggregate_score": 89,
+  "element_scores": {
+    "S001_Add_Element_0": {
+      "score": 85,
+      "penalties": [
+        "No id or automationid attribute (-15)"
+      ],
+      "bonuses": []
+    },
+    "S002_checkbox_1_0": {
+      "score": 85,
+      "penalties": [
+        "No id or automationid attribute (-15)"
+      ],
+      "bonuses": []
+    },
+    "S002_checkbox_2_1": {
+      "score": 85,
+      "penalties": [
+        "No id or automationid attribute (-15)"
+      ],
+      "bonuses": []
+    },
+    "S003_Dropdown_0": {
+      "score": 100,
+      "penalties": [],
+      "bonuses": [
+        "Has id attribute (+10)"
+      ]
+    },
+    "S004_Number_Input_0": {
+      "score": 85,
+      "penalties": [
+        "No id or automationid attribute (-15)"
+      ],
+      "bonuses": []
+    },
+    "S005_Input_Field_0": {
+      "score": 100,
+      "penalties": [],
+      "bonuses": [
+        "Has id attribute (+10)"
+      ]
+    },
+    "S005_Result_1": {
+      "score": 85,
+      "penalties": [
+        "No id or automationid attribute (-15)"
+      ],
+      "bonuses": []
+    }
+  }
+}

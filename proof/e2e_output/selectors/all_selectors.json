@@ -1,0 +1,9 @@
+{
+  "S001_Add_Element_0": "<html app='chrome.exe' /><webctrl tag='button' innertext='Add Element' />",
+  "S002_checkbox_1_0": "<html app='chrome.exe' /><webctrl tag='input' type='checkbox' />",
+  "S002_checkbox_2_1": "<html app='chrome.exe' /><webctrl tag='input' type='checkbox' />",
+  "S003_Dropdown_0": "<html app='chrome.exe' /><webctrl tag='select' id='dropdown' />",
+  "S004_Number_Input_0": "<html app='chrome.exe' /><webctrl tag='input' type='number' />",
+  "S005_Input_Field_0": "<html app='chrome.exe' /><webctrl tag='input' id='target' type='text' />",
+  "S005_Result_1": "<html app='TODO_APP' tag='TODO_TAG' aaname='TODO: Result' />"
+}

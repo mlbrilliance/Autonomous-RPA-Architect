@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:uipath="http://uipath.com/bpmn"
+                  id="Definitions_1"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="{{ process_id }}" name="{{ process_name }}" isExecutable="true">
+    {% for element in elements %}
+    {% if element.type == "startEvent" %}
+    <bpmn:startEvent id="{{ element.id }}" name="{{ element.name }}"/>
+    {% elif element.type == "endEvent" %}
+    <bpmn:endEvent id="{{ element.id }}" name="{{ element.name }}"/>
+    {% elif element.type == "serviceTask" %}
+    <bpmn:serviceTask id="{{ element.id }}" name="{{ element.name }}" implementation="{{ element.implementation | default('##UiPathProcess') }}">
+      {% if element.input_mappings %}
+      <bpmn:extensionElements>
+        <uipath:inputMapping>
+          {% for mapping in element.input_mappings %}
+          <uipath:parameter name="{{ mapping.name }}" expression="{{ mapping.expression }}"/>
+          {% endfor %}
+        </uipath:inputMapping>
+      </bpmn:extensionElements>
+      {% endif %}
+    </bpmn:serviceTask>
+    {% elif element.type == "userTask" %}
+    <bpmn:userTask id="{{ element.id }}" name="{{ element.name }}">
+      {% if element.assignee %}
+      <bpmn:humanPerformer>
+        <bpmn:resourceAssignmentExpression>
+          <bpmn:formalExpression>{{ element.assignee }}</bpmn:formalExpression>
+        </bpmn:resourceAssignmentExpression>
+      </bpmn:humanPerformer>
+      {% endif %}
+    </bpmn:userTask>
+    {% elif element.type == "businessRuleTask" %}
+    <bpmn:businessRuleTask id="{{ element.id }}" name="{{ element.name }}" implementation="##DMN"/>
+    {% elif element.type == "exclusiveGateway" %}
+    <bpmn:exclusiveGateway id="{{ element.id }}" name="{{ element.name }}"/>
+    {% elif element.type == "parallelGateway" %}
+    <bpmn:parallelGateway id="{{ element.id }}" name="{{ element.name }}"/>
+    {% endif %}
+    {% endfor %}
+
+    {% for flow in flows %}
+    <bpmn:sequenceFlow id="{{ flow.id }}" sourceRef="{{ flow.source }}" targetRef="{{ flow.target }}"{% if flow.name %} name="{{ flow.name }}"{% endif %}>
+      {% if flow.condition %}
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">{{ flow.condition }}</bpmn:conditionExpression>
+      {% endif %}
+    </bpmn:sequenceFlow>
+    {% endfor %}
+  </bpmn:process>
+</bpmn:definitions>

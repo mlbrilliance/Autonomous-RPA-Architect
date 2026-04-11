@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-04-06 17:00:33 UTC",
+  "target_url": "https://the-internet.herokuapp.com",
+  "process_name": "TheInternetAutomation",
+  "elapsed_s": 12.8,
+  "phases": [
+    {
+      "name": "Phase 0: Setup",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 1: Build ProcessIR",
+      "passed": true,
+      "duration_s": 0.17,
+      "error": null
+    },
+    {
+      "name": "Phase 2: Browser Harvest",
+      "passed": true,
+      "duration_s": 6.78,
+      "error": null
+    },
+    {
+      "name": "Phase 3: Element Matching",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 4: Selector Conversion",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 4b: Live Selector Validation",
+      "passed": true,
+      "duration_s": 5.24,
+      "error": null
+    },
+    {
+      "name": "Phase 5: Selector Scoring",
+      "passed": true,
+      "duration_s": 0.02,
+      "error": null
+    },
+    {
+      "name": "Phase 6: XAML Generation",
+      "passed": true,
+      "duration_s": 0.55,
+      "error": null
+    },
+    {
+      "name": "Phase 7: Object Repository v2",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 8: Coded C# Workflows",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 9: project.json",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 10: XAML Linting",
+      "passed": true,
+      "duration_s": 0.01,
+      "error": null
+    },
+    {
+      "name": "Phase 11: Coded Lint",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    }
+  ],
+  "totals": {
+    "actions": 7,
+    "matched": 6,
+    "unmatched": 1,
+    "selectors": 7,
+    "aggregate_score": 89,
+    "xaml_files": 10,
+    "cs_files": 2,
+    "obj_repo_files": 8,
+    "lint_errors": 12,
+    "lint_warnings": 0
+  }
+}

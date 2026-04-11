@@ -1,0 +1,62 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="InitAllApplications"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+  </x:Members>
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="InitAllApplications">
+    <ui:LogMessage DisplayName="Log InitAllApplications Start" Level="Info"
+      Message="[&quot;InitAllApplications: Starting application initialization&quot;]" />
+
+    <!-- Initialize TheInternet -->
+    <TryCatch DisplayName="Try Initialize TheInternet">
+      <TryCatch.Try>
+        <Sequence DisplayName="Initialize TheInternet">
+          <ui:LogMessage DisplayName="Log Opening TheInternet" Level="Info"
+            Message="[&quot;InitAllApplications: Opening TheInternet&quot;]" />
+
+          <!-- Generic initialization for TheInternet -->
+          <ui:LogMessage DisplayName="Log TheInternet Init" Level="Info"
+            Message="[&quot;InitAllApplications: TheInternet initialized (custom init required)&quot;]" />
+
+          <ui:LogMessage DisplayName="Log TheInternet Ready" Level="Info"
+            Message="[&quot;InitAllApplications: TheInternet is ready&quot;]" />
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="initException_1" />
+            </ActivityAction.Argument>
+            <Sequence DisplayName="Handle TheInternet Init Error">
+              <ui:LogMessage DisplayName="Log TheInternet Init Error" Level="Error"
+                Message="[&quot;InitAllApplications: Failed to initialize TheInternet - &quot; + initException_1.Message]" />
+              <Throw DisplayName="Re-throw TheInternet Error"
+                Exception="[New System.Exception(&quot;Failed to initialize TheInternet: &quot; + initException_1.Message, initException_1)]" />
+            </Sequence>
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+
+    <ui:LogMessage DisplayName="Log InitAllApplications Complete" Level="Info"
+      Message="[&quot;InitAllApplications: All applications initialized successfully&quot;]" />
+  </Sequence>
+</Activity>

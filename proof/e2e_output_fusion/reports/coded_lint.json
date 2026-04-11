@@ -1,0 +1,10 @@
+{
+  "ProcessWebInteraction.cs": [],
+  "Tests/TestVerification.cs": [
+    {
+      "rule_id": "XL-C001",
+      "severity": "ERROR",
+      "message": "Class extends CodedWorkflow but no [Workflow] attribute found on any method."
+    }
+  ]
+}

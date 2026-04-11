@@ -1,0 +1,161 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="InitAllSettings"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:sd="clr-namespace:System.Data;assembly=System.Data"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="out_Config" Type="InOutArgument(scg:Dictionary(x:String, x:Object))" />
+  </x:Members>
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="System.Data" />
+      <mva:VisualBasicImportReference Import="System.Linq" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="InitAllSettings">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtSettings" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtConstants" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtAssets" />
+      <Variable x:TypeArguments="x:String" Default="Data\\Config.xlsx" Name="ConfigFilePath" />
+      <Variable x:TypeArguments="x:String" Name="AssetValue" />
+    </Sequence.Variables>
+
+    <ui:LogMessage DisplayName="Log InitAllSettings Start" Level="Info"
+      Message="[&quot;InitAllSettings: Reading configuration from &quot; + ConfigFilePath]" />
+
+    <!-- Initialize Config Dictionary -->
+    <Assign DisplayName="Initialize Config Dictionary">
+      <Assign.To>
+        <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[out_Config]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[New Dictionary(Of String, Object)]</InArgument>
+      </Assign.Value>
+    </Assign>
+
+    <!-- Read Settings Sheet -->
+    <ui:ExcelReadRange DisplayName="Read Settings Sheet"
+      DataTable="[dtSettings]"
+      SheetName="Settings"
+      Range=""
+      WorkbookPath="[ConfigFilePath]"
+      AddHeaders="True" />
+
+    <!-- Process Settings Sheet -->
+    <ForEach x:TypeArguments="sd:DataRow" DisplayName="For Each Setting Row" Values="[dtSettings.AsEnumerable()]">
+      <ActivityAction x:TypeArguments="sd:DataRow">
+        <ActivityAction.Argument>
+          <DelegateInArgument x:TypeArguments="sd:DataRow" Name="settingRow" />
+        </ActivityAction.Argument>
+        <If DisplayName="Check Setting Name Not Empty"
+          Condition="[Not String.IsNullOrWhiteSpace(settingRow(&quot;Name&quot;).ToString)]">
+          <If.Then>
+            <Assign DisplayName="Add Setting to Config">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:Object">[out_Config(settingRow("Name").ToString.Trim)]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:Object">[settingRow("Value").ToString.Trim]</InArgument>
+              </Assign.Value>
+            </Assign>
+          </If.Then>
+        </If>
+      </ActivityAction>
+    </ForEach>
+
+    <!-- Read Constants Sheet -->
+    <ui:ExcelReadRange DisplayName="Read Constants Sheet"
+      DataTable="[dtConstants]"
+      SheetName="Constants"
+      Range=""
+      WorkbookPath="[ConfigFilePath]"
+      AddHeaders="True" />
+
+    <!-- Process Constants Sheet -->
+    <ForEach x:TypeArguments="sd:DataRow" DisplayName="For Each Constant Row" Values="[dtConstants.AsEnumerable()]">
+      <ActivityAction x:TypeArguments="sd:DataRow">
+        <ActivityAction.Argument>
+          <DelegateInArgument x:TypeArguments="sd:DataRow" Name="constantRow" />
+        </ActivityAction.Argument>
+        <If DisplayName="Check Constant Name Not Empty"
+          Condition="[Not String.IsNullOrWhiteSpace(constantRow(&quot;Name&quot;).ToString)]">
+          <If.Then>
+            <Assign DisplayName="Add Constant to Config">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:Object">[out_Config(constantRow("Name").ToString.Trim)]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:Object">[constantRow("Value").ToString.Trim]</InArgument>
+              </Assign.Value>
+            </Assign>
+          </If.Then>
+        </If>
+      </ActivityAction>
+    </ForEach>
+
+    <!-- Read Assets Sheet -->
+    <ui:ExcelReadRange DisplayName="Read Assets Sheet"
+      DataTable="[dtAssets]"
+      SheetName="Assets"
+      Range=""
+      WorkbookPath="[ConfigFilePath]"
+      AddHeaders="True" />
+
+    <!-- Process Assets Sheet - Get Orchestrator Assets -->
+    <ForEach x:TypeArguments="sd:DataRow" DisplayName="For Each Asset Row" Values="[dtAssets.AsEnumerable()]">
+      <ActivityAction x:TypeArguments="sd:DataRow">
+        <ActivityAction.Argument>
+          <DelegateInArgument x:TypeArguments="sd:DataRow" Name="assetRow" />
+        </ActivityAction.Argument>
+        <If DisplayName="Check Asset Name Not Empty"
+          Condition="[Not String.IsNullOrWhiteSpace(assetRow(&quot;Name&quot;).ToString)]">
+          <If.Then>
+            <TryCatch DisplayName="Try Get Orchestrator Asset">
+              <TryCatch.Try>
+                <Sequence DisplayName="Get Asset Value">
+                  <ui:GetAsset DisplayName="Get Orchestrator Asset"
+                    AssetName="[assetRow(&quot;Asset&quot;).ToString.Trim]"
+                    AssetValue="[AssetValue]"
+                    OrchestratorFolderPath="[If(dtAssets.Columns.Contains(&quot;OrchestratorFolder&quot;), assetRow(&quot;OrchestratorFolder&quot;).ToString.Trim, &quot;&quot;)]" />
+                  <Assign DisplayName="Add Asset Value to Config">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="x:Object">[out_Config(assetRow("Name").ToString.Trim)]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="x:Object">[AssetValue]</InArgument>
+                    </Assign.Value>
+                  </Assign>
+                </Sequence>
+              </TryCatch.Try>
+              <TryCatch.Catches>
+                <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+                  <ActivityAction x:TypeArguments="s:Exception">
+                    <ActivityAction.Argument>
+                      <DelegateInArgument x:TypeArguments="s:Exception" Name="assetException" />
+                    </ActivityAction.Argument>
+                    <ui:LogMessage DisplayName="Log Asset Error" Level="Warn"
+                      Message="[&quot;InitAllSettings: Could not retrieve Orchestrator asset '&quot; + assetRow(&quot;Asset&quot;).ToString + &quot;': &quot; + assetException.Message]" />
+                  </ActivityAction>
+                </Catch>
+              </TryCatch.Catches>
+            </TryCatch>
+          </If.Then>
+        </If>
+      </ActivityAction>
+    </ForEach>
+
+    <ui:LogMessage DisplayName="Log InitAllSettings Complete" Level="Info"
+      Message="[&quot;InitAllSettings: Configuration loaded with &quot; + out_Config.Count.ToString + &quot; settings&quot;]" />
+  </Sequence>
+</Activity>

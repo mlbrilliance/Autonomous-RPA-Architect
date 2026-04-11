@@ -1,0 +1,58 @@
+{
+  "name": "{{ project_name }}",
+  "description": "{{ description }}",
+  "main": "{{ main_entry | default('Main.xaml') }}",
+  "expressionLanguage": "CSharp",
+  "entryPoints": [
+    {
+      "filePath": "{{ main_entry | default('Main.xaml') }}",
+      "uniqueId": "{{ entry_point_id | default('00000000-0000-0000-0000-000000000001') }}",
+      "input": [],
+      "output": []
+    }
+  ],
+  "dependencies": {
+    "UiPath.System.Activities": "[{{ dependencies.get('UiPath.System.Activities', '23.10.6') }}]",
+    "UiPath.UIAutomation.Activities": "[{{ dependencies.get('UiPath.UIAutomation.Activities', '23.10.8') }}]",
+    "UiPath.Mail.Activities": "[{{ dependencies.get('UiPath.Mail.Activities', '1.21.3') }}]",
+    "UiPath.Excel.Activities": "[{{ dependencies.get('UiPath.Excel.Activities', '2.23.5') }}]"{% for dep_name, dep_version in dependencies.items() if dep_name not in ['UiPath.System.Activities', 'UiPath.UIAutomation.Activities', 'UiPath.Mail.Activities', 'UiPath.Excel.Activities'] %},
+    "{{ dep_name }}": "[{{ dep_version }}]"{% endfor %}
+  },
+  "toolVersion": "{{ studio_version | default('23.10.3') }}",
+  "projectVersion": "1.0.0",
+  "schemaVersion": "4.0",
+  "studioVersion": "{{ studio_version | default('23.10.3') }}",
+  "projectType": "Workflow",
+  "libraryOptions": {
+    "includeOriginalXaml": false,
+    "privateWorkflows": []
+  },
+  "designOptions": {
+    "projectProfile": "Developement",
+    "outputType": "Process",
+    "libraryOptions": {
+      "includeOriginalXaml": false,
+      "privateWorkflows": []
+    },
+    "fileInfoCollection": []
+  },
+  "targetFramework": "Windows",
+  "runtimeOptions": {
+    "autoDispose": false,
+    "netFrameworkLazyLoading": false,
+    "isPausable": true,
+    "isAttended": false,
+    "requiresUserInteraction": true,
+    "supportsPersistence": false,
+    "workflowSerialization": "DataContract",
+    "excludedLoggedData": [
+      "Private:*",
+      "Credential:*"
+    ],
+    "executionType": "Workflow",
+    "readyForPiP": false,
+    "startsInPiP": false,
+    "mustRestoreAllDependencies": true,
+    "pipType": "ChildSession"
+  }
+}

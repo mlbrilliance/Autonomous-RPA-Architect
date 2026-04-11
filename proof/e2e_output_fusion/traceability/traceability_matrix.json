@@ -1,0 +1,273 @@
+{
+  "matrix": [
+    {
+      "pdd_section": "Process Overview",
+      "pdd_text": "Name: WebInteractionAutomation",
+      "ir_node": "process_name",
+      "ir_value": "WebInteractionAutomation",
+      "xaml_file": "Main.xaml",
+      "xaml_element": "StateMachine DisplayName='WebInteractionAutomation Main'",
+      "obj_repo_file": "",
+      "config_key": "logF_BusinessProcessName",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Process Overview",
+      "pdd_text": "Type: transactional",
+      "ir_node": "process_type",
+      "ir_value": "transactional",
+      "xaml_file": "Framework/GetTransactionData.xaml",
+      "xaml_element": "Queue-based Transaction Retrieval (transactional \u2192 queue_performer)",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Systems",
+      "pdd_text": "TheInternet (web) \u2014 https://the-internet.herokuapp.com",
+      "ir_node": "systems[].name='TheInternet'",
+      "ir_value": "{\"name\": \"TheInternet\", \"type\": \"web\", \"url\": \"https://the-internet.herokuapp.com\", \"login_required\"",
+      "xaml_file": "Framework/InitAllApplications.xaml",
+      "xaml_element": "Open TheInternet (web)",
+      "obj_repo_file": ".objects/TheInternet/1.0/TheInternet/S003_Dropdown_0.json, .objects/TheInternet/1.0/TheInternet/S005_Result_1.json, .objects/TheInternet/1.0/TheInternet/S001_Add_Element_0.json",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Actions/S001",
+      "pdd_text": "click 'Add Element'",
+      "ir_node": "transactions['InteractWithTestPages'].steps['S001'].actions[0]",
+      "ir_value": "action=click, target=Add Element, confidence=0.5",
+      "xaml_file": "Framework/Process.xaml",
+      "xaml_element": "ui:NClick DisplayName='Click Add Element'",
+      "obj_repo_file": ".objects/TheInternet/1.0/TheInternet/S001_Add_Element_0.json",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Actions/S002",
+      "pdd_text": "check 'checkbox 1'",
+      "ir_node": "transactions['InteractWithTestPages'].steps['S002'].actions[0]",
+      "ir_value": "action=check, target=checkbox 1, confidence=0.5",
+      "xaml_file": "Framework/Process.xaml",
+      "xaml_element": "ui:NCheck DisplayName='Check checkbox 1'",
+      "obj_repo_file": ".objects/TheInternet/1.0/TheInternet/S002_checkbox_1_0.json",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Actions/S002",
+      "pdd_text": "check 'checkbox 2'",
+      "ir_node": "transactions['InteractWithTestPages'].steps['S002'].actions[1]",
+      "ir_value": "action=check, target=checkbox 2, confidence=0.5",
+      "xaml_file": "Framework/Process.xaml",
+      "xaml_element": "ui:NCheck DisplayName='Check checkbox 2'",
+      "obj_repo_file": ".objects/TheInternet/1.0/TheInternet/S002_checkbox_2_1.json",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Actions/S003",
+      "pdd_text": "select_item 'Dropdown' = 'Option 1'",
+      "ir_node": "transactions['InteractWithTestPages'].steps['S003'].actions[0]",
+      "ir_value": "action=select_item, target=Dropdown, confidence=0.5",
+      "xaml_file": "Framework/Process.xaml",
+      "xaml_element": "ui:NSelectItem DisplayName='Select_Item Dropdown'",
+      "obj_repo_file": ".objects/TheInternet/1.0/TheInternet/S003_Dropdown_0.json",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Actions/S004",
+      "pdd_text": "type_into 'Number Input' = '42'",
+      "ir_node": "transactions['InteractWithTestPages'].steps['S004'].actions[0]",
+      "ir_value": "action=type_into, target=Number Input, confidence=0.5",
+      "xaml_file": "Framework/Process.xaml",
+      "xaml_element": "ui:NTypeInto DisplayName='Type_Into Number Input'",
+      "obj_repo_file": ".objects/TheInternet/1.0/TheInternet/S004_Number_Input_0.json",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Actions/S005",
+      "pdd_text": "type_into 'Input Field' = 'Hello World'",
+      "ir_node": "transactions['InteractWithTestPages'].steps['S005'].actions[0]",
+      "ir_value": "action=type_into, target=Input Field, confidence=0.5",
+      "xaml_file": "Framework/Process.xaml",
+      "xaml_element": "ui:NTypeInto DisplayName='Type_Into Input Field'",
+      "obj_repo_file": ".objects/TheInternet/1.0/TheInternet/S005_Input_Field_0.json",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Actions/S005",
+      "pdd_text": "get_text 'Result'",
+      "ir_node": "transactions['InteractWithTestPages'].steps['S005'].actions[1]",
+      "ir_value": "action=get_text, target=Result, confidence=0.5",
+      "xaml_file": "Framework/Process.xaml",
+      "xaml_element": "ui:NGetText (placeholder)",
+      "obj_repo_file": ".objects/TheInternet/1.0/TheInternet/S005_Result_1.json",
+      "config_key": "",
+      "trace_status": "PARTIAL (placeholder selector)"
+    },
+    {
+      "pdd_section": "Configuration",
+      "pdd_text": "MaxRetryNumber = 3",
+      "ir_node": "config['MaxRetryNumber']",
+      "ir_value": "3",
+      "xaml_file": "Main.xaml (MaxRetryNumber variable)",
+      "xaml_element": "Config(\"MaxRetryNumber\") accessor",
+      "obj_repo_file": "",
+      "config_key": "MaxRetryNumber",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Configuration",
+      "pdd_text": "LogLevel = Info",
+      "ir_node": "config['LogLevel']",
+      "ir_value": "Info",
+      "xaml_file": "All XAML files (LogMessage Level)",
+      "xaml_element": "Config(\"LogLevel\") accessor",
+      "obj_repo_file": "",
+      "config_key": "LogLevel",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Configuration",
+      "pdd_text": "OrchestratorQueueName = WebInteraction_Queue",
+      "ir_node": "config['OrchestratorQueueName']",
+      "ir_value": "WebInteraction_Queue",
+      "xaml_file": "Framework/GetTransactionData.xaml (QueueName)",
+      "xaml_element": "Config(\"OrchestratorQueueName\") accessor",
+      "obj_repo_file": "",
+      "config_key": "OrchestratorQueueName",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "Configuration",
+      "pdd_text": "MaxConsecutiveSystemExceptions = 3",
+      "ir_node": "config['MaxConsecutiveSystemExceptions']",
+      "ir_value": "3",
+      "xaml_file": "Data/Config.xlsx",
+      "xaml_element": "Config(\"MaxConsecutiveSystemExceptions\") accessor",
+      "obj_repo_file": "",
+      "config_key": "MaxConsecutiveSystemExceptions",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "REFramework Structure",
+      "pdd_text": "REFramework requires Main.xaml",
+      "ir_node": "process_type='transactional' \u2192 REFramework",
+      "ir_value": "510 lines generated",
+      "xaml_file": "Main.xaml",
+      "xaml_element": "State machine entry point with Init/GetTransactionData/Process/EndProcess",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "REFramework Structure",
+      "pdd_text": "REFramework requires Framework/InitAllSettings.xaml",
+      "ir_node": "process_type='transactional' \u2192 REFramework",
+      "ir_value": "161 lines generated",
+      "xaml_file": "Framework/InitAllSettings.xaml",
+      "xaml_element": "Reads Config.xlsx into Config dictionary",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "REFramework Structure",
+      "pdd_text": "REFramework requires Framework/InitAllApplications.xaml",
+      "ir_node": "process_type='transactional' \u2192 REFramework",
+      "ir_value": "62 lines generated",
+      "xaml_file": "Framework/InitAllApplications.xaml",
+      "xaml_element": "Opens and logs into target applications",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "REFramework Structure",
+      "pdd_text": "REFramework requires Framework/GetTransactionData.xaml",
+      "ir_node": "process_type='transactional' \u2192 REFramework",
+      "ir_value": "73 lines generated",
+      "xaml_file": "Framework/GetTransactionData.xaml",
+      "xaml_element": "Retrieves queue item from Orchestrator",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "REFramework Structure",
+      "pdd_text": "REFramework requires Framework/Process.xaml",
+      "ir_node": "process_type='transactional' \u2192 REFramework",
+      "ir_value": "37 lines generated",
+      "xaml_file": "Framework/Process.xaml",
+      "xaml_element": "Executes transaction processing with UI activities",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "REFramework Structure",
+      "pdd_text": "REFramework requires Framework/SetTransactionStatus.xaml",
+      "ir_node": "process_type='transactional' \u2192 REFramework",
+      "ir_value": "137 lines generated",
+      "xaml_file": "Framework/SetTransactionStatus.xaml",
+      "xaml_element": "Sets queue item status (Success/Failed/Retry)",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "REFramework Structure",
+      "pdd_text": "REFramework requires Framework/EndProcess.xaml",
+      "ir_node": "process_type='transactional' \u2192 REFramework",
+      "ir_value": "111 lines generated",
+      "xaml_file": "Framework/EndProcess.xaml",
+      "xaml_element": "Cleanup and final logging",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "REFramework Structure",
+      "pdd_text": "REFramework requires Framework/CloseAllApplications.xaml",
+      "ir_node": "process_type='transactional' \u2192 REFramework",
+      "ir_value": "55 lines generated",
+      "xaml_file": "Framework/CloseAllApplications.xaml",
+      "xaml_element": "Gracefully closes target applications",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    },
+    {
+      "pdd_section": "REFramework Structure",
+      "pdd_text": "REFramework requires Framework/KillAllProcesses.xaml",
+      "ir_node": "process_type='transactional' \u2192 REFramework",
+      "ir_value": "55 lines generated",
+      "xaml_file": "Framework/KillAllProcesses.xaml",
+      "xaml_element": "Force-kills application processes",
+      "obj_repo_file": "",
+      "config_key": "",
+      "trace_status": "COMPLETE"
+    }
+  ],
+  "summary": {
+    "total_entries": 23,
+    "complete": 22,
+    "partial": 1,
+    "sections": [
+      "Actions/S004",
+      "Actions/S003",
+      "Systems",
+      "Actions/S001",
+      "Process Overview",
+      "Configuration",
+      "Actions/S002",
+      "REFramework Structure",
+      "Actions/S005"
+    ]
+  }
+}

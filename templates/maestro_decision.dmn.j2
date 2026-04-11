@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             id="Definitions_{{ decision_id }}"
+             name="{{ decision_name }}"
+             namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="{{ decision_id }}" name="{{ decision_name }}">
+    <decisionTable id="DecisionTable_{{ decision_id }}" hitPolicy="{{ hit_policy | default('UNIQUE') }}">
+      {% for input in inputs %}
+      <input id="Input_{{ loop.index }}" label="{{ input.label }}">
+        <inputExpression id="InputExpression_{{ loop.index }}" typeRef="{{ input.type_ref | default('string') }}">
+          <text>{{ input.expression }}</text>
+        </inputExpression>
+      </input>
+      {% endfor %}
+      {% for output in outputs %}
+      <output id="Output_{{ loop.index }}" label="{{ output.label }}" name="{{ output.name }}" typeRef="{{ output.type_ref | default('string') }}"/>
+      {% endfor %}
+      {% for rule in rules %}
+      <rule id="Rule_{{ loop.index }}">
+        {% for entry in rule.input_entries %}
+        <inputEntry id="InputEntry_{{ loop.parent.loop.index }}_{{ loop.index }}">
+          <text>{{ entry }}</text>
+        </inputEntry>
+        {% endfor %}
+        {% for entry in rule.output_entries %}
+        <outputEntry id="OutputEntry_{{ loop.parent.loop.index }}_{{ loop.index }}">
+          <text>{{ entry }}</text>
+        </outputEntry>
+        {% endfor %}
+      </rule>
+      {% endfor %}
+    </decisionTable>
+  </decision>
+</definitions>

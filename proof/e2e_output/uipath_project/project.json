@@ -1,0 +1,57 @@
+{
+  "projectVersion": "1.0.0",
+  "description": "End-to-end proof: automate interactions on the-internet.herokuapp.com",
+  "name": "TheInternetAutomation",
+  "dependencies": {
+    "UiPath.System.Activities": "[25.10.0]",
+    "UiPath.UIAutomation.Activities": "[25.10.16]",
+    "UiPath.Mail.Activities": "[2.3.10]",
+    "UiPath.Excel.Activities": "[3.2.1]",
+    "UiPath.Testing.Activities": "[25.10.0]",
+    "UiPath.WebAPI.Activities": "[2.3.1]"
+  },
+  "toolVersion": "25.10.0",
+  "targetFramework": "net6.0-windows",
+  "designOptions": {
+    "projectProfile": "Developement",
+    "outputType": "Process",
+    "libraryOptions": {
+      "includeOriginalXaml": false,
+      "privateWorkflows": []
+    },
+    "processOptions": {
+      "ignoredFiles": [],
+      "readyToRunEntryPoints": [],
+      "autoDispose": false,
+      "isFaulted": false
+    },
+    "fileInfoCollection": [],
+    "modernBehavior": true
+  },
+  "runtimeOptions": {
+    "autoDispose": false,
+    "isPausable": true,
+    "requiresUserInteraction": true,
+    "supportsPersistence": false,
+    "excludedLoggedData": [
+      "Private:*",
+      "EncryptedPassword"
+    ],
+    "executionType": "Workflow",
+    "readyToRunEntryPoints": [],
+    "startsWithDefault": true,
+    "netVersion": "net6.0"
+  },
+  "entryPoints": [
+    {
+      "filePath": "Main.xaml",
+      "uniqueId": "00000000-0000-0000-0000-000000000001",
+      "input": [],
+      "output": []
+    }
+  ],
+  "schemaVersion": "4.0",
+  "studioVersion": "25.10.0.0",
+  "expressionLanguage": "CSharp",
+  "isTemplate": false
+}

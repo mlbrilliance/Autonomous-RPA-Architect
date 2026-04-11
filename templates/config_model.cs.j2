@@ -1,0 +1,37 @@
+using System;
+using System.Collections.Generic;
+using UiPath.CodedWorkflows;
+
+namespace {{ namespace }}
+{
+    /// <summary>
+    /// Strongly-typed configuration wrapper for Config.xlsx settings.
+    /// </summary>
+    public class {{ class_name }} : CodedWorkflow
+    {
+        private readonly Dictionary<string, object> _config;
+
+        public {{ class_name }}(Dictionary<string, object> config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+        }
+
+        // Standard REFramework settings
+        public string OrchestratorQueueName => GetString("OrchestratorQueueName");
+        public int MaxRetryNumber => GetInt("MaxRetryNumber", 3);
+        public string LogF_BusinessProcessName => GetString("logF_BusinessProcessName");
+
+        {% for setting in settings %}
+        public {{ setting.csharp_type }} {{ setting.name }} => Get{{ setting.accessor }}("{{ setting.key }}"{% if setting.default %}, {{ setting.default }}{% endif %});
+        {% endfor %}
+
+        private string GetString(string key, string defaultValue = "")
+            => _config.TryGetValue(key, out var val) ? val?.ToString() ?? defaultValue : defaultValue;
+
+        private int GetInt(string key, int defaultValue = 0)
+            => _config.TryGetValue(key, out var val) && int.TryParse(val?.ToString(), out var result) ? result : defaultValue;
+
+        private bool GetBool(string key, bool defaultValue = false)
+            => _config.TryGetValue(key, out var val) && bool.TryParse(val?.ToString(), out var result) ? result : defaultValue;
+    }
+}

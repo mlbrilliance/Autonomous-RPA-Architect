@@ -1,0 +1,7 @@
+{
+  "graphs": {
+    "rpa_architect": {
+      "module": "main:graph"
+    }
+  }
+}

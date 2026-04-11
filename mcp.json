@@ -1,0 +1,8 @@
+{
+  "name": "rpa-architect",
+  "version": "0.1.0",
+  "description": "Autonomous RPA Architect - Generate UiPath projects from PDDs",
+  "transport": "stdio",
+  "command": "python",
+  "args": ["-m", "rpa_architect.mcp_server.server"]
+}

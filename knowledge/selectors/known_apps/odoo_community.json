@@ -1,0 +1,110 @@
+{
+  "application": "Odoo Community",
+  "type": "web",
+  "browser": "chrome.exe",
+  "base_url_pattern": "*odoo*",
+  "default_login_path": "/web/login",
+  "post_login_landing": "/odoo",
+  "notes": [
+    "Odoo's web client (since v15) is built on Owl.js — many DOM nodes are dynamically generated and lack stable ids.",
+    "Prefer attribute selectors using `name=`, `data-tooltip=`, `aria-label=`, or `data-menu-xmlid=`.",
+    "The Accounting module's vendor bill list is at /odoo/action-account.action_move_in_invoice_type.",
+    "Form fields use `<input>` elements with the `name` attribute matching the Odoo model field (partner_id, ref, invoice_date, amount_total, ...).",
+    "For inputs that turn into autocomplete dropdowns (like Vendor selector), wait for the .o_input_dropdown to render then click an `<li>` whose `data-id` matches the partner ID.",
+    "Top-level menu uses `<a class='o_menu_brand'>` for the home/logo button — useful as an anchor for waitings.",
+    "When the Accounting app first opens, an onboarding panel may appear — close with `button[name='action_dismiss']`.",
+    "URL routes are stable across versions: /web/login, /odoo, /odoo/accounting, /odoo/inventory, etc."
+  ],
+  "selectors": {
+    "login_email": {
+      "selector": "<html app='chrome.exe' url='*odoo*login*' /><webctrl tag='input' id='login' name='login' type='text' />",
+      "description": "Login (email or username) field on /web/login",
+      "stability": "high",
+      "category": "login"
+    },
+    "login_password": {
+      "selector": "<html app='chrome.exe' url='*odoo*login*' /><webctrl tag='input' id='password' name='password' type='password' />",
+      "description": "Password field on /web/login",
+      "stability": "high",
+      "category": "login"
+    },
+    "login_submit_button": {
+      "selector": "<html app='chrome.exe' url='*odoo*login*' /><webctrl tag='button' type='submit' aaname='Log in' />",
+      "description": "'Log in' submit button on /web/login",
+      "stability": "high",
+      "category": "login"
+    },
+    "main_menu_brand": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='a' class='o_menu_brand' />",
+      "description": "Home/brand link in the top menu — used as a 'logged-in' anchor",
+      "stability": "high",
+      "category": "navigation"
+    },
+    "accounting_menu": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='a' aria-label='Accounting' />",
+      "description": "Accounting app tile on the main /odoo dashboard",
+      "stability": "medium",
+      "category": "navigation"
+    },
+    "vendor_bills_menu_item": {
+      "selector": "<html app='chrome.exe' url='*odoo*accounting*' /><webctrl tag='a' data-menu-xmlid='account.menu_action_move_in_invoice_type' />",
+      "description": "Vendor Bills item under the Vendors top menu",
+      "stability": "high",
+      "category": "navigation"
+    },
+    "new_button": {
+      "selector": "<html app='chrome.exe' url='*odoo*action-account.action_move_in_invoice_type*' /><webctrl tag='button' class='o_list_button_add' aaname='New' />",
+      "description": "New button on the vendor bill list view",
+      "stability": "high",
+      "category": "form"
+    },
+    "vendor_field_input": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='input' name='partner_id' />",
+      "description": "Vendor (partner) selector input on the vendor bill form",
+      "stability": "medium",
+      "category": "form"
+    },
+    "bill_reference_input": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='input' name='ref' />",
+      "description": "Bill Reference input (vendor's invoice number)",
+      "stability": "high",
+      "category": "form"
+    },
+    "invoice_date_input": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='input' name='invoice_date' />",
+      "description": "Invoice Date input on vendor bill form",
+      "stability": "high",
+      "category": "form"
+    },
+    "currency_dropdown": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='input' name='currency_id' />",
+      "description": "Currency picker on the vendor bill form",
+      "stability": "medium",
+      "category": "form"
+    },
+    "total_amount_field": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='span' name='amount_total' />",
+      "description": "Computed total amount span on the vendor bill form",
+      "stability": "medium",
+      "category": "form"
+    },
+    "save_button": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='button' aaname='Save manually' />",
+      "description": "Manual save button (cloud icon) when form is in unsaved/dirty state",
+      "stability": "high",
+      "category": "form"
+    },
+    "user_menu": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='button' class='dropdown-toggle' aaname='User Menu' />",
+      "description": "User menu in the top-right corner — opens log-out option",
+      "stability": "medium",
+      "category": "navigation"
+    },
+    "logout_link": {
+      "selector": "<html app='chrome.exe' url='*odoo*' /><webctrl tag='a' aaname='Log out' />",
+      "description": "Log out link inside the user menu dropdown",
+      "stability": "high",
+      "category": "navigation"
+    }
+  }
+}

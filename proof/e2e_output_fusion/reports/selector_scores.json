@@ -1,0 +1,26 @@
+{
+  "aggregate_score": 89,
+  "element_scores": {
+    "S001_Add_Element_0": {
+      "score": 85
+    },
+    "S002_checkbox_1_0": {
+      "score": 85
+    },
+    "S002_checkbox_2_1": {
+      "score": 85
+    },
+    "S003_Dropdown_0": {
+      "score": 100
+    },
+    "S004_Number_Input_0": {
+      "score": 85
+    },
+    "S005_Input_Field_0": {
+      "score": 100
+    },
+    "S005_Result_1": {
+      "score": 85
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "application": "Salesforce Lightning",
+  "type": "web",
+  "browser": "chrome.exe",
+  "base_url_pattern": "*.lightning.force.com/*",
+  "notes": [
+    "Salesforce Lightning uses dynamic component IDs -- never rely on auto-generated IDs.",
+    "Use aaname, title, and aria-label attributes for stable selectors.",
+    "Lightning Web Components may use shadow DOM -- use css-selector with piercing if needed.",
+    "Aura component IDs (data-aura-rendered-by) change between releases; avoid them.",
+    "Always use wildcards for URL matching since org IDs vary between environments."
+  ],
+  "selectors": {
+    "login_username": {
+      "selector": "<html app='chrome.exe' url='*login*' /><webctrl tag='input' id='username' type='email' />",
+      "description": "Username/email field on Salesforce login page",
+      "stability": "high",
+      "category": "login"
+    },
+    "login_password": {
+      "selector": "<html app='chrome.exe' url='*login*' /><webctrl tag='input' id='password' type='password' />",
+      "description": "Password field on Salesforce login page",
+      "stability": "high",
+      "category": "login"
+    },
+    "login_button": {
+      "selector": "<html app='chrome.exe' url='*login*' /><webctrl tag='input' id='Login' type='submit' />",
+      "description": "Login submit button",
+      "stability": "high",
+      "category": "login"
+    },
+    "app_launcher": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='button' class='slds-button' aaname='App Launcher' />",
+      "description": "Waffle menu / App Launcher button in the header",
+      "stability": "medium",
+      "category": "navigation"
+    },
+    "global_search": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='input' class='*search*' aaname='Search*' />",
+      "description": "Global search input in the top navigation bar",
+      "stability": "medium",
+      "category": "navigation",
+      "notes": "Use wildcard on aaname as placeholder text varies by org configuration"
+    },
+    "nav_tab": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='a' class='*navLink*' aaname='{{tabName}}' />",
+      "description": "Top navigation tab (Accounts, Contacts, Opportunities, etc.)",
+      "stability": "medium",
+      "category": "navigation",
+      "parameters": ["tabName"]
+    },
+    "record_edit_button": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='button' aaname='Edit' class='*actionButton*' />",
+      "description": "Edit button on a record detail page",
+      "stability": "medium",
+      "category": "record_view"
+    },
+    "record_field_value": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='*' class='*outputField*' aaname='{{fieldLabel}}' />",
+      "description": "Read-only field value on a record detail page",
+      "stability": "medium",
+      "category": "record_view",
+      "parameters": ["fieldLabel"]
+    },
+    "record_input_field": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='input' aaname='{{fieldLabel}}' />",
+      "description": "Editable input field on a record edit form",
+      "stability": "medium",
+      "category": "record_view",
+      "parameters": ["fieldLabel"]
+    },
+    "record_save_button": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='button' aaname='Save' class='*publishButton*' />",
+      "description": "Save button on a record edit form",
+      "stability": "medium",
+      "category": "record_view"
+    },
+    "list_view_dropdown": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='button' class='*listViewPickerTrigger*' />",
+      "description": "List view selector dropdown trigger",
+      "stability": "medium",
+      "category": "list_view"
+    },
+    "list_view_record_link": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='a' aaname='{{recordName}}' class='*outputLookup*' />",
+      "description": "Clickable record name link in a list view table",
+      "stability": "medium",
+      "category": "list_view",
+      "parameters": ["recordName"]
+    },
+    "list_view_new_button": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='button' aaname='New' class='*forceActionLink*' />",
+      "description": "New record button on a list view page",
+      "stability": "medium",
+      "category": "list_view"
+    },
+    "modal_save_button": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='button' aaname='Save' parentclass='*modal-footer*' />",
+      "description": "Save button inside a Lightning modal dialog",
+      "stability": "medium",
+      "category": "modal"
+    },
+    "modal_cancel_button": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='button' aaname='Cancel' parentclass='*modal-footer*' />",
+      "description": "Cancel button inside a Lightning modal dialog",
+      "stability": "medium",
+      "category": "modal"
+    },
+    "toast_success": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='div' class='*toastMessage*slds-theme--success*' />",
+      "description": "Green success toast notification message",
+      "stability": "medium",
+      "category": "notification"
+    },
+    "toast_error": {
+      "selector": "<html app='chrome.exe' url='*.lightning.force.com/*' /><webctrl tag='div' class='*toastMessage*slds-theme--error*' />",
+      "description": "Red error toast notification message",
+      "stability": "medium",
+      "category": "notification"
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "timestamp": "2026-04-07 03:20:13 UTC",
+  "target_url": "https://the-internet.herokuapp.com",
+  "process_name": "WebInteractionAutomation",
+  "pdd_source": "sample_pdd.md",
+  "elapsed_s": 39.9,
+  "phases": [
+    {
+      "name": "Phase 0: Setup",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 1: Load PDD",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 2: PDD \u2192 ProcessIR",
+      "passed": true,
+      "duration_s": 0.17,
+      "error": null
+    },
+    {
+      "name": "Phase 3: Browser Harvest",
+      "passed": true,
+      "duration_s": 7.29,
+      "error": null
+    },
+    {
+      "name": "Phase 4: Element Matching",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 5: Selector Conversion",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 6: Live Selector Validation",
+      "passed": true,
+      "duration_s": 5.78,
+      "error": null
+    },
+    {
+      "name": "Phase 7: Selector Scoring",
+      "passed": true,
+      "duration_s": 0.01,
+      "error": null
+    },
+    {
+      "name": "Phase 8: REFramework XAML (Templates)",
+      "passed": true,
+      "duration_s": 1.19,
+      "error": null
+    },
+    {
+      "name": "Phase 9: Process.xaml with Live Activities",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 10: Object Repository v2",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 11: Coded C# Workflows",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 12: Config.xlsx",
+      "passed": true,
+      "duration_s": 0.38,
+      "error": null
+    },
+    {
+      "name": "Phase 13: project.json",
+      "passed": true,
+      "duration_s": 0.0,
+      "error": null
+    },
+    {
+      "name": "Phase 14: Wiring Engine",
+      "passed": true,
+      "duration_s": 0.01,
+      "error": null
+    },
+    {
+      "name": "Phase 15: Validation & Lint",
+      "passed": true,
+      "duration_s": 0.03,
+      "error": null
+    },
+    {
+      "name": "Phase 16: Execution Video",
+      "passed": true,
+      "duration_s": 18.94,
+      "error": null
+    },
+    {
+      "name": "Phase 17: Failure Injection",
+      "passed": true,
+      "duration_s": 6.04,
+      "error": null
+    },
+    {
+      "name": "Phase 18: Traceability Matrix",
+      "passed": true,
+      "duration_s": 0.01,
+      "error": null
+    }
+  ],
+  "totals": {
+    "actions": 7,
+    "matched": 6,
+    "selectors": 7,
+    "aggregate_score": 89,
+    "xaml_template_lines": 1201,
+    "xaml_stub_lines": 87,
+    "files_generated": 21,
+    "lint_errors": 2,
+    "lint_warnings": 0
+  }
+}

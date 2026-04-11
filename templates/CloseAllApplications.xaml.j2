@@ -1,0 +1,74 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="CloseAllApplications"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="CloseAllApplications">
+    <ui:LogMessage DisplayName="Log CloseAllApplications Start" Level="Info"
+      Message="[&quot;CloseAllApplications: Starting graceful application shutdown&quot;]" />
+
+    {% for system in systems %}
+    <!-- Close {{ system.name }} -->
+    <TryCatch DisplayName="Try Close {{ system.name }}">
+      <TryCatch.Try>
+        <Sequence DisplayName="Close {{ system.name }}">
+          <ui:LogMessage DisplayName="Log Closing {{ system.name }}" Level="Info"
+            Message="[&quot;CloseAllApplications: Closing {{ system.name }}&quot;]" />
+
+          {% if system.type == 'browser' %}
+          <!-- Close Browser for {{ system.name }} -->
+          <ui:CloseTab DisplayName="Close {{ system.name }} Browser Tab" />
+          {% elif system.type == 'desktop' %}
+          <!-- Close Desktop Application {{ system.name }} -->
+          <ui:CloseApplication DisplayName="Close {{ system.name }} Application">
+            <ui:CloseApplication.Target>
+              <ui:Target Selector="&lt;wnd app='{{ system.process_name | default(system.name | lower) }}.exe' /&gt;" />
+            </ui:CloseApplication.Target>
+          </ui:CloseApplication>
+          {% else %}
+          <!-- Generic close for {{ system.name }} -->
+          <ui:LogMessage DisplayName="Log Generic Close {{ system.name }}" Level="Info"
+            Message="[&quot;CloseAllApplications: {{ system.name }} closed (custom close required)&quot;]" />
+          {% endif %}
+
+          <ui:LogMessage DisplayName="Log {{ system.name }} Closed" Level="Info"
+            Message="[&quot;CloseAllApplications: {{ system.name }} closed successfully&quot;]" />
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="closeEx_{{ loop.index }}" />
+            </ActivityAction.Argument>
+            <ui:LogMessage DisplayName="Log {{ system.name }} Close Error" Level="Warn"
+              Message="[&quot;CloseAllApplications: Failed to close {{ system.name }} gracefully - &quot; + closeEx_{{ loop.index }}.Message]" />
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    {% endfor %}
+    {% if not systems %}
+    <!-- Placeholder: Add application close steps here -->
+    <ui:LogMessage DisplayName="Log No Applications To Close" Level="Info"
+      Message="[&quot;CloseAllApplications: No applications configured for closing&quot;]" />
+    {% endif %}
+
+    <ui:LogMessage DisplayName="Log CloseAllApplications Complete" Level="Info"
+      Message="[&quot;CloseAllApplications: Application shutdown completed&quot;]" />
+  </Sequence>
+</Activity>

@@ -1,0 +1,510 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="Main"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_OrchestratorQueueName" Type="InArgument(x:String)" />
+    <x:Property Name="in_OrchestratorQueueFolder" Type="InArgument(x:String)" />
+  </x:Members>
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="System.Data" />
+      <mva:VisualBasicImportReference Import="System.Linq" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <StateMachine DisplayName="{{ project_name | default('REFramework') }} Main" sap2010:WorkflowViewState.IdRef="StateMachine_1">
+    <StateMachine.Variables>
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:Object)" Name="Config" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="TransactionNumber" />
+      <Variable x:TypeArguments="ui:QueueItem" Name="TransactionItem" />
+      <Variable x:TypeArguments="s:Exception" Name="SystemException" xmlns:s="clr-namespace:System;assembly=mscorlib" />
+      <Variable x:TypeArguments="ui:BusinessRuleException" Name="BusinessException" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="RetryNumber" />
+      <Variable x:TypeArguments="x:Int32" Default="{{ max_retries | default(3) }}" Name="MaxRetryNumber" />
+      <Variable x:TypeArguments="x:Int32" Name="TransactionCount" />
+      <Variable x:TypeArguments="x:String" Name="TransactionField1" />
+      <Variable x:TypeArguments="x:String" Name="TransactionField2" />
+      <Variable x:TypeArguments="x:String" Name="TransactionID" />
+    </StateMachine.Variables>
+    <StateMachine.InitialState>
+      <StateReference>Init</StateReference>
+    </StateMachine.InitialState>
+
+    <!-- ==================== INIT STATE ==================== -->
+    <State DisplayName="Init" sap2010:WorkflowViewState.IdRef="State_Init">
+      <State.Entry>
+        <Sequence DisplayName="Init Sequence">
+          <ui:LogMessage DisplayName="Log Init Start" Level="Info"
+            Message="[&quot;{{ project_name | default('Process') }}: Initialization started&quot;]" />
+
+          <!-- Invoke InitAllSettings -->
+          <ui:InvokeWorkflowFile DisplayName="Invoke InitAllSettings"
+            FilePath="Framework\InitAllSettings.xaml"
+            UnSafe="False">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InOutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                x:Key="out_Config">[Config]</InOutArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+
+          <!-- Set MaxRetryNumber from Config -->
+          <Assign DisplayName="Set MaxRetryNumber">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:Int32">[MaxRetryNumber]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:Int32">[Convert.ToInt32(Config("MaxRetryNumber"))]</InArgument>
+            </Assign.Value>
+          </Assign>
+
+          <!-- Invoke InitAllApplications -->
+          <ui:InvokeWorkflowFile DisplayName="Invoke InitAllApplications"
+            FilePath="Framework\InitAllApplications.xaml"
+            UnSafe="False">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                x:Key="in_Config">[Config]</InArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+
+          <ui:LogMessage DisplayName="Log Init Complete" Level="Info"
+            Message="[&quot;{{ project_name | default('Process') }}: Initialization completed successfully&quot;]" />
+        </Sequence>
+      </State.Entry>
+
+      <State.Transitions>
+        <!-- Init Success → Get Transaction Data -->
+        <Transition DisplayName="Init Success" To="{x:Reference Name=State_GetTransactionData}">
+          <Transition.Condition>
+            <InArgument x:TypeArguments="x:Boolean">[SystemException Is Nothing]</InArgument>
+          </Transition.Condition>
+          <Transition.Action>
+            <Assign DisplayName="Reset RetryNumber">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:Int32">[RetryNumber]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:Int32">0</InArgument>
+              </Assign.Value>
+            </Assign>
+          </Transition.Action>
+        </Transition>
+
+        <!-- Init Failure → End Process -->
+        <Transition DisplayName="Init Failure" To="{x:Reference Name=State_EndProcess}">
+          <Transition.Condition>
+            <InArgument x:TypeArguments="x:Boolean">[SystemException IsNot Nothing]</InArgument>
+          </Transition.Condition>
+          <Transition.Action>
+            <ui:LogMessage DisplayName="Log Init Error" Level="Error"
+              Message="[&quot;{{ project_name | default('Process') }}: Initialization failed - &quot; + SystemException.Message]" />
+          </Transition.Action>
+        </Transition>
+      </State.Transitions>
+    </State>
+
+    <!-- ==================== GET TRANSACTION DATA STATE ==================== -->
+    <State x:Name="State_GetTransactionData" DisplayName="Get Transaction Data"
+      sap2010:WorkflowViewState.IdRef="State_GetTransactionData">
+      <State.Entry>
+        <Sequence DisplayName="Get Transaction Data Sequence">
+          <ui:LogMessage DisplayName="Log Get Transaction" Level="Trace"
+            Message="[&quot;{{ project_name | default('Process') }}: Getting transaction #&quot; + TransactionNumber.ToString]" />
+
+          <TryCatch DisplayName="Try Get Transaction Data">
+            <TryCatch.Try>
+              <ui:InvokeWorkflowFile DisplayName="Invoke GetTransactionData"
+                FilePath="Framework\GetTransactionData.xaml"
+                UnSafe="False">
+                <ui:InvokeWorkflowFile.Arguments>
+                  <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                    x:Key="in_Config">[Config]</InArgument>
+                  <InArgument x:TypeArguments="x:Int32"
+                    x:Key="in_TransactionNumber">[TransactionNumber]</InArgument>
+                  <OutArgument x:TypeArguments="ui:QueueItem"
+                    x:Key="out_TransactionItem">[TransactionItem]</OutArgument>
+                  <OutArgument x:TypeArguments="x:String"
+                    x:Key="out_TransactionField1">[TransactionField1]</OutArgument>
+                  <OutArgument x:TypeArguments="x:String"
+                    x:Key="out_TransactionField2">[TransactionField2]</OutArgument>
+                  <OutArgument x:TypeArguments="x:String"
+                    x:Key="out_TransactionID">[TransactionID]</OutArgument>
+                </ui:InvokeWorkflowFile.Arguments>
+              </ui:InvokeWorkflowFile>
+            </TryCatch.Try>
+            <TryCatch.Catches>
+              <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+                <ActivityAction x:TypeArguments="s:Exception">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                  </ActivityAction.Argument>
+                  <Assign DisplayName="Assign SystemException">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="s:Exception">[SystemException]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="s:Exception">[exception]</InArgument>
+                    </Assign.Value>
+                  </Assign>
+                </ActivityAction>
+              </Catch>
+            </TryCatch.Catches>
+          </TryCatch>
+        </Sequence>
+      </State.Entry>
+
+      <State.Transitions>
+        <!-- New Transaction → Process Transaction -->
+        <Transition DisplayName="New Transaction" To="{x:Reference Name=State_ProcessTransaction}">
+          <Transition.Condition>
+            <InArgument x:TypeArguments="x:Boolean">[TransactionItem IsNot Nothing AndAlso SystemException Is Nothing]</InArgument>
+          </Transition.Condition>
+          <Transition.Action>
+            <ui:LogMessage DisplayName="Log New Transaction" Level="Info"
+              Message="[&quot;{{ project_name | default('Process') }}: Processing transaction #&quot; + TransactionNumber.ToString]" />
+          </Transition.Action>
+        </Transition>
+
+        <!-- No More Transactions → End Process -->
+        <Transition DisplayName="No Data" To="{x:Reference Name=State_EndProcess}">
+          <Transition.Condition>
+            <InArgument x:TypeArguments="x:Boolean">[TransactionItem Is Nothing AndAlso SystemException Is Nothing]</InArgument>
+          </Transition.Condition>
+          <Transition.Action>
+            <ui:LogMessage DisplayName="Log No More Transactions" Level="Info"
+              Message="[&quot;{{ project_name | default('Process') }}: No more transactions to process&quot;]" />
+          </Transition.Action>
+        </Transition>
+
+        <!-- System Error → End Process -->
+        <Transition DisplayName="System Error" To="{x:Reference Name=State_EndProcess}">
+          <Transition.Condition>
+            <InArgument x:TypeArguments="x:Boolean">[SystemException IsNot Nothing]</InArgument>
+          </Transition.Condition>
+        </Transition>
+      </State.Transitions>
+    </State>
+
+    <!-- ==================== PROCESS TRANSACTION STATE ==================== -->
+    <State x:Name="State_ProcessTransaction" DisplayName="Process Transaction"
+      sap2010:WorkflowViewState.IdRef="State_ProcessTransaction">
+      <State.Entry>
+        <Sequence DisplayName="Process Transaction Sequence">
+          <TryCatch DisplayName="Try Process">
+            <TryCatch.Try>
+              <Sequence DisplayName="Process Steps">
+                <ui:LogMessage DisplayName="Log Process Start" Level="Info"
+                  Message="[&quot;{{ project_name | default('Process') }}: Processing started for transaction #&quot; + TransactionNumber.ToString]" />
+
+                <ui:InvokeWorkflowFile DisplayName="Invoke Process"
+                  FilePath="Process.xaml"
+                  UnSafe="False">
+                  <ui:InvokeWorkflowFile.Arguments>
+                    <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                      x:Key="in_Config">[Config]</InArgument>
+                    <InArgument x:TypeArguments="ui:QueueItem"
+                      x:Key="in_TransactionItem">[TransactionItem]</InArgument>
+                    <InArgument x:TypeArguments="x:String"
+                      x:Key="in_TransactionField1">[TransactionField1]</InArgument>
+                    <InArgument x:TypeArguments="x:String"
+                      x:Key="in_TransactionField2">[TransactionField2]</InArgument>
+                    <InArgument x:TypeArguments="x:String"
+                      x:Key="in_TransactionID">[TransactionID]</InArgument>
+                  </ui:InvokeWorkflowFile.Arguments>
+                </ui:InvokeWorkflowFile>
+              </Sequence>
+            </TryCatch.Try>
+            <TryCatch.Catches>
+              <!-- Business Rule Exception -->
+              <Catch x:TypeArguments="ui:BusinessRuleException">
+                <ActivityAction x:TypeArguments="ui:BusinessRuleException">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="ui:BusinessRuleException" Name="BusinessException" />
+                  </ActivityAction.Argument>
+                  <Sequence DisplayName="Handle Business Exception">
+                    <Assign DisplayName="Set BusinessException">
+                      <Assign.To>
+                        <OutArgument x:TypeArguments="ui:BusinessRuleException">[BusinessException]</OutArgument>
+                      </Assign.To>
+                      <Assign.Value>
+                        <InArgument x:TypeArguments="ui:BusinessRuleException">[BusinessException]</InArgument>
+                      </Assign.Value>
+                    </Assign>
+                    <ui:LogMessage DisplayName="Log Business Exception" Level="Warn"
+                      Message="[&quot;{{ project_name | default('Process') }}: Business Rule Exception - &quot; + BusinessException.Message]" />
+                  </Sequence>
+                </ActivityAction>
+              </Catch>
+              <!-- System Exception -->
+              <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+                <ActivityAction x:TypeArguments="s:Exception">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                  </ActivityAction.Argument>
+                  <Sequence DisplayName="Handle System Exception">
+                    <Assign DisplayName="Set SystemException">
+                      <Assign.To>
+                        <OutArgument x:TypeArguments="s:Exception">[SystemException]</OutArgument>
+                      </Assign.To>
+                      <Assign.Value>
+                        <InArgument x:TypeArguments="s:Exception">[exception]</InArgument>
+                      </Assign.Value>
+                    </Assign>
+                    <ui:LogMessage DisplayName="Log System Exception" Level="Error"
+                      Message="[&quot;{{ project_name | default('Process') }}: System Exception - &quot; + SystemException.Message]" />
+                  </Sequence>
+                </ActivityAction>
+              </Catch>
+            </TryCatch.Catches>
+          </TryCatch>
+        </Sequence>
+      </State.Entry>
+
+      <State.Transitions>
+        <!-- Success → Set Transaction Status then Get Transaction Data -->
+        <Transition DisplayName="Success" To="{x:Reference Name=State_GetTransactionData}">
+          <Transition.Condition>
+            <InArgument x:TypeArguments="x:Boolean">[BusinessException Is Nothing AndAlso SystemException Is Nothing]</InArgument>
+          </Transition.Condition>
+          <Transition.Action>
+            <Sequence DisplayName="Set Success Status">
+              <ui:InvokeWorkflowFile DisplayName="Invoke SetTransactionStatus"
+                FilePath="Framework\SetTransactionStatus.xaml"
+                UnSafe="False">
+                <ui:InvokeWorkflowFile.Arguments>
+                  <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                    x:Key="in_Config">[Config]</InArgument>
+                  <InArgument x:TypeArguments="ui:QueueItem"
+                    x:Key="in_TransactionItem">[TransactionItem]</InArgument>
+                  <InArgument x:TypeArguments="x:String"
+                    x:Key="in_StatusMessage">[&quot;Success&quot;]</InArgument>
+                  <InArgument x:TypeArguments="ui:BusinessRuleException"
+                    x:Key="in_BusinessException">[BusinessException]</InArgument>
+                  <InArgument x:TypeArguments="s:Exception"
+                    x:Key="in_SystemException"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">[SystemException]</InArgument>
+                </ui:InvokeWorkflowFile.Arguments>
+              </ui:InvokeWorkflowFile>
+              <Assign DisplayName="Increment TransactionNumber">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Int32">[TransactionNumber]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Int32">[TransactionNumber + 1]</InArgument>
+                </Assign.Value>
+              </Assign>
+              <Assign DisplayName="Reset RetryNumber">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Int32">[RetryNumber]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Int32">0</InArgument>
+                </Assign.Value>
+              </Assign>
+            </Sequence>
+          </Transition.Action>
+        </Transition>
+
+        <!-- Business Exception → Get Transaction Data (no retry) -->
+        <Transition DisplayName="Business Exception" To="{x:Reference Name=State_GetTransactionData}">
+          <Transition.Condition>
+            <InArgument x:TypeArguments="x:Boolean">[BusinessException IsNot Nothing]</InArgument>
+          </Transition.Condition>
+          <Transition.Action>
+            <Sequence DisplayName="Handle Business Exception">
+              <ui:InvokeWorkflowFile DisplayName="Invoke SetTransactionStatus"
+                FilePath="Framework\SetTransactionStatus.xaml"
+                UnSafe="False">
+                <ui:InvokeWorkflowFile.Arguments>
+                  <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                    x:Key="in_Config">[Config]</InArgument>
+                  <InArgument x:TypeArguments="ui:QueueItem"
+                    x:Key="in_TransactionItem">[TransactionItem]</InArgument>
+                  <InArgument x:TypeArguments="x:String"
+                    x:Key="in_StatusMessage">[BusinessException.Message]</InArgument>
+                  <InArgument x:TypeArguments="ui:BusinessRuleException"
+                    x:Key="in_BusinessException">[BusinessException]</InArgument>
+                  <InArgument x:TypeArguments="s:Exception"
+                    x:Key="in_SystemException"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">[SystemException]</InArgument>
+                </ui:InvokeWorkflowFile.Arguments>
+              </ui:InvokeWorkflowFile>
+              <Assign DisplayName="Increment TransactionNumber">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Int32">[TransactionNumber]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Int32">[TransactionNumber + 1]</InArgument>
+                </Assign.Value>
+              </Assign>
+              <Assign DisplayName="Reset RetryNumber">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Int32">[RetryNumber]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Int32">0</InArgument>
+                </Assign.Value>
+              </Assign>
+              <Assign DisplayName="Reset BusinessException">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="ui:BusinessRuleException">[BusinessException]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="ui:BusinessRuleException">[Nothing]</InArgument>
+                </Assign.Value>
+              </Assign>
+            </Sequence>
+          </Transition.Action>
+        </Transition>
+
+        <!-- System Exception with Retry → Init -->
+        <Transition DisplayName="System Exception - Retry" To="{x:Reference Name=State_Init}">
+          <Transition.Condition>
+            <InArgument x:TypeArguments="x:Boolean">[SystemException IsNot Nothing AndAlso RetryNumber &lt; MaxRetryNumber]</InArgument>
+          </Transition.Condition>
+          <Transition.Action>
+            <Sequence DisplayName="Retry Logic">
+              <ui:InvokeWorkflowFile DisplayName="Invoke SetTransactionStatus"
+                FilePath="Framework\SetTransactionStatus.xaml"
+                UnSafe="False">
+                <ui:InvokeWorkflowFile.Arguments>
+                  <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                    x:Key="in_Config">[Config]</InArgument>
+                  <InArgument x:TypeArguments="ui:QueueItem"
+                    x:Key="in_TransactionItem">[TransactionItem]</InArgument>
+                  <InArgument x:TypeArguments="x:String"
+                    x:Key="in_StatusMessage">[SystemException.Message + &quot; - Retry &quot; + RetryNumber.ToString]</InArgument>
+                  <InArgument x:TypeArguments="ui:BusinessRuleException"
+                    x:Key="in_BusinessException">[BusinessException]</InArgument>
+                  <InArgument x:TypeArguments="s:Exception"
+                    x:Key="in_SystemException"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">[SystemException]</InArgument>
+                </ui:InvokeWorkflowFile.Arguments>
+              </ui:InvokeWorkflowFile>
+              <Assign DisplayName="Increment RetryNumber">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Int32">[RetryNumber]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Int32">[RetryNumber + 1]</InArgument>
+                </Assign.Value>
+              </Assign>
+              <ui:InvokeWorkflowFile DisplayName="Invoke CloseAllApplications"
+                FilePath="Framework\CloseAllApplications.xaml"
+                UnSafe="False" />
+              <ui:InvokeWorkflowFile DisplayName="Invoke KillAllProcesses"
+                FilePath="Framework\KillAllProcesses.xaml"
+                UnSafe="False" />
+              <Assign DisplayName="Reset SystemException">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="s:Exception"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">[SystemException]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="s:Exception"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">[Nothing]</InArgument>
+                </Assign.Value>
+              </Assign>
+            </Sequence>
+          </Transition.Action>
+        </Transition>
+
+        <!-- System Exception no Retry → End Process -->
+        <Transition DisplayName="System Exception - No Retry" To="{x:Reference Name=State_EndProcess}">
+          <Transition.Condition>
+            <InArgument x:TypeArguments="x:Boolean">[SystemException IsNot Nothing AndAlso RetryNumber >= MaxRetryNumber]</InArgument>
+          </Transition.Condition>
+          <Transition.Action>
+            <Sequence DisplayName="Final Failure">
+              <ui:InvokeWorkflowFile DisplayName="Invoke SetTransactionStatus"
+                FilePath="Framework\SetTransactionStatus.xaml"
+                UnSafe="False">
+                <ui:InvokeWorkflowFile.Arguments>
+                  <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                    x:Key="in_Config">[Config]</InArgument>
+                  <InArgument x:TypeArguments="ui:QueueItem"
+                    x:Key="in_TransactionItem">[TransactionItem]</InArgument>
+                  <InArgument x:TypeArguments="x:String"
+                    x:Key="in_StatusMessage">[&quot;Max retries reached: &quot; + SystemException.Message]</InArgument>
+                  <InArgument x:TypeArguments="ui:BusinessRuleException"
+                    x:Key="in_BusinessException">[BusinessException]</InArgument>
+                  <InArgument x:TypeArguments="s:Exception"
+                    x:Key="in_SystemException"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">[SystemException]</InArgument>
+                </ui:InvokeWorkflowFile.Arguments>
+              </ui:InvokeWorkflowFile>
+              <ui:LogMessage DisplayName="Log Max Retries" Level="Error"
+                Message="[&quot;{{ project_name | default('Process') }}: Max retries reached. Transaction failed.&quot;]" />
+            </Sequence>
+          </Transition.Action>
+        </Transition>
+      </State.Transitions>
+    </State>
+
+    <!-- ==================== END PROCESS STATE ==================== -->
+    <State x:Name="State_EndProcess" DisplayName="End Process" IsFinal="True"
+      sap2010:WorkflowViewState.IdRef="State_EndProcess">
+      <State.Entry>
+        <Sequence DisplayName="End Process Sequence">
+          <ui:LogMessage DisplayName="Log End Process" Level="Info"
+            Message="[&quot;{{ project_name | default('Process') }}: Process ending&quot;]" />
+
+          <TryCatch DisplayName="Try Close Applications">
+            <TryCatch.Try>
+              <Sequence DisplayName="Cleanup">
+                <ui:InvokeWorkflowFile DisplayName="Invoke CloseAllApplications"
+                  FilePath="Framework\CloseAllApplications.xaml"
+                  UnSafe="False" />
+              </Sequence>
+            </TryCatch.Try>
+            <TryCatch.Catches>
+              <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+                <ActivityAction x:TypeArguments="s:Exception">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                  </ActivityAction.Argument>
+                  <Sequence DisplayName="Handle Cleanup Error">
+                    <ui:InvokeWorkflowFile DisplayName="Invoke KillAllProcesses"
+                      FilePath="Framework\KillAllProcesses.xaml"
+                      UnSafe="False" />
+                    <ui:LogMessage DisplayName="Log Cleanup Error" Level="Warn"
+                      Message="[&quot;{{ project_name | default('Process') }}: Error during cleanup - &quot; + exception.Message]" />
+                  </Sequence>
+                </ActivityAction>
+              </Catch>
+            </TryCatch.Catches>
+          </TryCatch>
+
+          <ui:InvokeWorkflowFile DisplayName="Invoke EndProcess"
+            FilePath="Framework\EndProcess.xaml"
+            UnSafe="False">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                x:Key="in_Config">[Config]</InArgument>
+              <InArgument x:TypeArguments="s:Exception"
+                x:Key="in_SystemException"
+                xmlns:s="clr-namespace:System;assembly=mscorlib">[SystemException]</InArgument>
+              <InArgument x:TypeArguments="x:Int32"
+                x:Key="in_TransactionNumber">[TransactionNumber]</InArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+
+          <ui:LogMessage DisplayName="Log Process Complete" Level="Info"
+            Message="[&quot;{{ project_name | default('Process') }}: Process ended. Transactions processed: &quot; + TransactionNumber.ToString]" />
+        </Sequence>
+      </State.Entry>
+    </State>
+
+  </StateMachine>
+</Activity>

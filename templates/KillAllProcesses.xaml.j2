@@ -1,0 +1,79 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="KillAllProcesses"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:s="clr-namespace:System;assembly=mscorlib"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:sd="clr-namespace:System.Diagnostics;assembly=System"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Diagnostics" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="KillAllProcesses">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:Process()" Name="RunningProcesses" />
+    </Sequence.Variables>
+
+    <ui:LogMessage DisplayName="Log KillAllProcesses Start" Level="Info"
+      Message="[&quot;KillAllProcesses: Starting force kill of application processes&quot;]" />
+
+    {% for process_name in process_names %}
+    <!-- Kill {{ process_name }} -->
+    <TryCatch DisplayName="Try Kill {{ process_name }}">
+      <TryCatch.Try>
+        <Sequence DisplayName="Kill {{ process_name }}">
+          <ui:KillProcess DisplayName="Kill {{ process_name }}"
+            ProcessName="{{ process_name }}" />
+          <ui:LogMessage DisplayName="Log {{ process_name }} Killed" Level="Info"
+            Message="[&quot;KillAllProcesses: {{ process_name }} process killed&quot;]" />
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="killEx_{{ loop.index }}" />
+            </ActivityAction.Argument>
+            <ui:LogMessage DisplayName="Log {{ process_name }} Kill Error" Level="Warn"
+              Message="[&quot;KillAllProcesses: Could not kill {{ process_name }} - &quot; + killEx_{{ loop.index }}.Message]" />
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    {% endfor %}
+    {% if not process_names %}
+    <!-- Default: Kill common browser processes used in automation -->
+    {% for default_proc in ['iexplore', 'chrome', 'msedge', 'firefox'] %}
+    <TryCatch DisplayName="Try Kill {{ default_proc }}">
+      <TryCatch.Try>
+        <ui:KillProcess DisplayName="Kill {{ default_proc }}"
+          ProcessName="{{ default_proc }}" />
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="killExDefault_{{ loop.index }}" />
+            </ActivityAction.Argument>
+            <ui:LogMessage DisplayName="Log {{ default_proc }} Not Running" Level="Trace"
+              Message="[&quot;KillAllProcesses: {{ default_proc }} was not running or could not be killed&quot;]" />
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+    {% endfor %}
+    {% endif %}
+
+    <ui:LogMessage DisplayName="Log KillAllProcesses Complete" Level="Info"
+      Message="[&quot;KillAllProcesses: Force kill completed&quot;]" />
+  </Sequence>
+</Activity>

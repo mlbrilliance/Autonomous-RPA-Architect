@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "actions": [],
+  "warnings": [
+    "No custom workflows found in Workflows/ directory."
+  ],
+  "errors": []
+}

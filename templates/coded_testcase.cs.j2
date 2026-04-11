@@ -1,0 +1,51 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using UiPath.CodedWorkflows;
+using UiPath.Testing;
+using UiPath.Testing.Activities.TestData;
+using UiPath.Testing.Activities.TestDataQueues.Enums;
+using UiPath.Testing.Enums;
+
+namespace {{ namespace }}
+{
+    /// <summary>
+    /// Test case for {{ target_workflow | default(class_name) }}.
+    /// {{ description | default('Auto-generated test case.') }}
+    /// </summary>
+    public class {{ class_name }} : CodedWorkflow
+    {
+        [TestCase]
+        public void {{ test_name }}()
+        {
+            // ---- Setup ----
+            {% for step in setup_steps %}
+            {{ step }}
+            {% endfor %}
+            {% if not setup_steps %}
+            // TODO: Add setup steps (initialize test data, open applications, etc.)
+            Log("Test setup completed for {{ test_name }}.");
+            {% endif %}
+
+            // ---- Execute ----
+            {% for step in execution_steps | default([]) %}
+            {{ step }}
+            {% endfor %}
+            {% if not execution_steps | default([]) %}
+            // TODO: Invoke the workflow under test
+            // var result = RunWorkflow<{{ target_workflow | default('TargetWorkflow') }}>.Execute();
+            {% endif %}
+
+            // ---- Assert ----
+            {% for assertion in assertions %}
+            testing.VerifyExpression({{ assertion.expression }}, "{{ assertion.message }}");
+            {% endfor %}
+            {% if not assertions %}
+            // TODO: Add assertions to verify workflow results
+            // testing.VerifyExpression(result != null, "Result should not be null");
+            {% endif %}
+
+            Log("Test {{ test_name }} completed successfully.");
+        }
+    }
+}

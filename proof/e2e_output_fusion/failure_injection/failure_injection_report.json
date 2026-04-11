@@ -1,0 +1,218 @@
+{
+  "elapsed_s": 6.0,
+  "xaml_analysis": {
+    "total_checks": 26,
+    "passed_checks": 26,
+    "pass_rate_pct": 100.0,
+    "scenarios": [
+      {
+        "name": "System Exception + Retry",
+        "description": "When a system exception occurs during processing, the REFramework should: catch the exception, invoke SetTransactionStatus, increment retry counter, close/kill applications, and transition back to Init state.",
+        "checks": [
+          {
+            "file": "Main.xaml",
+            "check": "StateMachine with 4 states",
+            "passed": true,
+            "detail": "Found 4 State elements"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "TryCatch in Process Transaction state",
+            "passed": true,
+            "detail": "TryCatch block wraps process execution"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "SystemException variable declared",
+            "passed": true,
+            "detail": "Variable for capturing system exceptions"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "Retry transition (System Exception \u2192 Init)",
+            "passed": true,
+            "detail": "Transition back to Init for retry on system exception"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "RetryNumber increment logic",
+            "passed": true,
+            "detail": "RetryNumber counter incremented on each retry"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "MaxRetryNumber comparison",
+            "passed": true,
+            "detail": "Retry count compared against maximum"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "CloseAllApplications invoked on retry",
+            "passed": true,
+            "detail": "Applications closed before retry initialization"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "KillAllProcesses invoked on retry",
+            "passed": true,
+            "detail": "Processes killed before retry"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "SetTransactionStatus invoked with error",
+            "passed": true,
+            "detail": "Transaction status set on exception"
+          }
+        ]
+      },
+      {
+        "name": "Business Rule Exception",
+        "description": "When a business rule exception occurs, the REFramework should: catch BusinessRuleException separately from System exceptions, set transaction status to Failed (no retry), and move to next transaction.",
+        "checks": [
+          {
+            "file": "Main.xaml",
+            "check": "BusinessRuleException catch block",
+            "passed": true,
+            "detail": "Separate catch for BusinessRuleException type"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "Business Exception transition (no retry)",
+            "passed": true,
+            "detail": "Business exceptions skip retry and go to next transaction"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "BusinessException reset to Nothing",
+            "passed": true,
+            "detail": "BusinessException variable reset after handling"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "TransactionNumber incremented on business exception",
+            "passed": true,
+            "detail": "Move to next transaction after business exception"
+          }
+        ]
+      },
+      {
+        "name": "Queue Empty / No More Transactions",
+        "description": "When GetTransactionData returns Nothing (no more items), the REFramework should transition to EndProcess state.",
+        "checks": [
+          {
+            "file": "Main.xaml",
+            "check": "TransactionItem Is Nothing check",
+            "passed": true,
+            "detail": "Check if transaction item is null"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "No Data transition to End Process",
+            "passed": true,
+            "detail": "Transition to EndProcess when no items remain"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "EndProcess state marked as Final",
+            "passed": true,
+            "detail": "EndProcess is a terminal state"
+          },
+          {
+            "file": "GetTransactionData.xaml",
+            "check": "Queue item retrieval logic",
+            "passed": true,
+            "detail": "Queue item retrieval logic present"
+          }
+        ]
+      },
+      {
+        "name": "Max Retries Exceeded",
+        "description": "When retry count reaches MaxRetryNumber, the REFramework should stop retrying and transition to EndProcess with error status.",
+        "checks": [
+          {
+            "file": "Main.xaml",
+            "check": "Max retry transition to End Process",
+            "passed": true,
+            "detail": "Transition to EndProcess when max retries reached"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "Max retries log message",
+            "passed": true,
+            "detail": "Error logged when max retries reached"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "Init state has TryCatch",
+            "passed": true,
+            "detail": "Found 18 TryCatch blocks total"
+          }
+        ]
+      },
+      {
+        "name": "Framework Structural Integrity",
+        "description": "General REFramework structural requirements.",
+        "checks": [
+          {
+            "file": "Main.xaml",
+            "check": "Config dictionary variable",
+            "passed": true,
+            "detail": "Config dictionary for settings storage"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "InitAllSettings invocation",
+            "passed": true,
+            "detail": "Settings initialization workflow invoked"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "InitAllApplications invocation",
+            "passed": true,
+            "detail": "Application initialization workflow invoked"
+          },
+          {
+            "file": "Main.xaml",
+            "check": "EndProcess invocation",
+            "passed": true,
+            "detail": "End process cleanup workflow invoked"
+          },
+          {
+            "file": "SetTransactionStatus.xaml",
+            "check": "Status handling logic exists",
+            "passed": true,
+            "detail": "SetTransactionStatus.xaml: 137 lines"
+          },
+          {
+            "file": "InitAllSettings.xaml",
+            "check": "Config.xlsx reading logic",
+            "passed": true,
+            "detail": "Config initialization from Excel"
+          }
+        ]
+      }
+    ]
+  },
+  "live_tests": [
+    {
+      "name": "Page Load Timeout",
+      "passed": true,
+      "detail": "Handled gracefully \u2014 navigated to https://the-internet.herokuapp.com/nonexistent_page_xyz"
+    },
+    {
+      "name": "Missing Element Selector",
+      "passed": true,
+      "detail": "Element correctly not found (count=0) \u2014 exception handling would trigger"
+    },
+    {
+      "name": "Element Removed After Discovery",
+      "passed": true,
+      "detail": "Element removed \u2014 selector returns 0 matches, REFramework retry would trigger"
+    },
+    {
+      "name": "Type Into Non-Input Element",
+      "passed": true,
+      "detail": "Correctly rejected: Error \u2014 REFramework catches as SystemException"
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+    "process_name": "InvoiceProcessing",
+    "process_type": "transactional",
+    "description": "Automated invoice processing: extract data from web portal, validate against business rules, and post to ERP system.",
+    "systems": [
+        {
+            "name": "InvoicePortal",
+            "type": "web",
+            "url": "https://invoices.example.com",
+            "login_required": true
+        },
+        {
+            "name": "ERPSystem",
+            "type": "web",
+            "url": "https://erp.example.com",
+            "login_required": true
+        }
+    ],
+    "credentials": [
+        {
+            "name": "InvoicePortal_Cred",
+            "type": "credential",
+            "orchestrator_path": "Production/InvoicePortal_ServiceAccount",
+            "description": "Service account for the invoice web portal."
+        }
+    ],
+    "transactions": [
+        {
+            "name": "ProcessInvoice",
+            "input_contract": {
+                "fields": [
+                    {"name": "InvoiceNumber", "type": "String", "required": true, "description": "Unique invoice identifier."},
+                    {"name": "VendorName", "type": "String", "required": true, "description": "Name of the vendor."},
+                    {"name": "Amount", "type": "Decimal", "required": true, "description": "Invoice total amount."},
+                    {"name": "DueDate", "type": "DateTime", "required": false, "description": "Payment due date."}
+                ]
+            },
+            "output_contract": {
+                "fields": [
+                    {"name": "Status", "type": "String", "required": true, "description": "Processing result status."},
+                    {"name": "ERPReference", "type": "String", "required": false, "description": "ERP posting reference number."}
+                ]
+            },
+            "steps": [
+                {
+                    "id": "S001",
+                    "type": "open_application",
+                    "system_ref": "InvoicePortal",
+                    "description": "Open the invoice web portal and navigate to the queue.",
+                    "actions": [
+                        {
+                            "action": "click",
+                            "target": "Invoice Queue Tab",
+                            "selector_hint": "<html app='chrome.exe' /><webctrl tag='a' innertext='Invoice Queue' />",
+                            "confidence": 0.9
+                        }
+                    ],
+                    "parameters": {
+                        "url": "https://invoices.example.com/queue"
+                    }
+                },
+                {
+                    "id": "S002",
+                    "type": "extract_data",
+                    "system_ref": "InvoicePortal",
+                    "description": "Extract invoice details from the current queue item.",
+                    "actions": [
+                        {
+                            "action": "get_text",
+                            "target": "Invoice Number Field",
+                            "selector_hint": "<html app='chrome.exe' /><webctrl tag='span' id='invoiceNum' />",
+                            "confidence": 0.85
+                        },
+                        {
+                            "action": "get_text",
+                            "target": "Amount Field",
+                            "selector_hint": "<html app='chrome.exe' /><webctrl tag='span' id='amount' />",
+                            "confidence": 0.85
+                        },
+                        {
+                            "action": "get_text",
+                            "target": "Vendor Name Field",
+                            "confidence": 0.6
+                        }
+                    ]
+                },
+                {
+                    "id": "S003",
+                    "type": "data_operation",
+                    "description": "Validate extracted invoice data against business rules.",
+                    "actions": [],
+                    "parameters": {
+                        "validation_type": "business_rules"
+                    }
+                },
+                {
+                    "id": "S004",
+                    "type": "ui_flow",
+                    "system_ref": "ERPSystem",
+                    "description": "Post validated invoice data to the ERP system.",
+                    "actions": [
+                        {
+                            "action": "type_into",
+                            "target": "Invoice Number Input",
+                            "value": "{{InvoiceNumber}}",
+                            "selector_hint": "<html app='chrome.exe' /><webctrl tag='input' name='inv_num' />",
+                            "confidence": 0.8
+                        },
+                        {
+                            "action": "type_into",
+                            "target": "Amount Input",
+                            "value": "{{Amount}}",
+                            "selector_hint": "<html app='chrome.exe' /><webctrl tag='input' name='amount' />",
+                            "confidence": 0.8
+                        },
+                        {
+                            "action": "click",
+                            "target": "Submit Button",
+                            "selector_hint": "<html app='chrome.exe' /><webctrl tag='button' id='submitBtn' />",
+                            "confidence": 0.9
+                        }
+                    ]
+                }
+            ],
+            "business_rules": [
+                {
+                    "id": "BR001",
+                    "condition": "Invoice amount exceeds $10,000",
+                    "outcome": "route",
+                    "reason": "High-value invoices require manager approval before posting.",
+                    "parameters": {"route_to": "ManagerApprovalQueue"}
+                },
+                {
+                    "id": "BR002",
+                    "condition": "Vendor is not in approved vendor list",
+                    "outcome": "business_exception",
+                    "reason": "Only approved vendors can have invoices processed automatically.",
+                    "parameters": {}
+                }
+            ]
+        }
+    ],
+    "config": {
+        "MaxRetryNumber": "3",
+        "LogLevel": "Info",
+        "InvoicePortalUrl": "https://invoices.example.com",
+        "ERPPostingEndpoint": "https://erp.example.com/api/invoices",
+        "HighValueThreshold": "10000"
+    },
+    "exception_categories": [
+        {
+            "name": "InvalidInvoice",
+            "type": "business",
+            "retry_count": 0,
+            "description": "Invoice data is invalid or incomplete."
+        },
+        {
+            "name": "ERPConnectionFailure",
+            "type": "system",
+            "retry_count": 3,
+            "description": "Unable to connect to the ERP system."
+        }
+    ],
+    "metadata": {
+        "author": "RPA Architect",
+        "version": "1.0",
+        "extraction_date": "2026-03-09"
+    }
+}

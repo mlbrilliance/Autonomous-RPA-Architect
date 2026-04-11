@@ -1,0 +1,239 @@
+{
+  "process_name": "OdooInvoiceProcessing",
+  "process_type": "transactional",
+  "description": "Process vendor invoices via UiPath Document Understanding and create Vendor Bills in a self-hosted Odoo Community ERP. Each invoice PDF arrives in an Orchestrator queue, is digitised + extracted via the public DU endpoint, normalised by an in-workflow LLM agent, and posted to Odoo via JSON-RPC by a coded C# workflow.",
+  "systems": [
+    {
+      "name": "Odoo",
+      "type": "web",
+      "url": "http://localhost:8069",
+      "login_required": true
+    }
+  ],
+  "credentials": [
+    {
+      "name": "OdooCredential",
+      "type": "credential",
+      "orchestrator_path": "Shared/OdooLogin",
+      "description": "Odoo admin user/password"
+    },
+    {
+      "name": "OdooBaseURL",
+      "type": "asset",
+      "orchestrator_path": "Shared/OdooBaseURL",
+      "description": "Public Odoo URL exposed via ngrok"
+    },
+    {
+      "name": "DUApiKey",
+      "type": "credential",
+      "orchestrator_path": "Shared/DUApiKey",
+      "description": "UiPath public DU endpoint API key"
+    },
+    {
+      "name": "OdooInvoices",
+      "type": "queue",
+      "orchestrator_path": "Shared/OdooInvoices",
+      "description": "Queue of invoice PDFs to process"
+    }
+  ],
+  "transactions": [
+    {
+      "name": "ProcessInvoice",
+      "input_contract": null,
+      "output_contract": null,
+      "steps": [
+        {
+          "id": "S001",
+          "type": "login_sequence",
+          "system_ref": "Odoo",
+          "actions": [
+            {
+              "action": "type_into",
+              "target": "Email field",
+              "value": "{{odoo_user}}",
+              "selector_hint": null,
+              "confidence": 0.9
+            },
+            {
+              "action": "type_into",
+              "target": "Password field",
+              "value": "{{odoo_pass}}",
+              "selector_hint": null,
+              "confidence": 0.9
+            },
+            {
+              "action": "click",
+              "target": "Login button",
+              "value": null,
+              "selector_hint": null,
+              "confidence": 0.85
+            }
+          ],
+          "parameters": {
+            "url": "http://localhost:8069/web/login"
+          },
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Log into Odoo via /web/login with stored credentials"
+        },
+        {
+          "id": "S002",
+          "type": "navigate",
+          "system_ref": "Odoo",
+          "actions": [],
+          "parameters": {
+            "url": "http://localhost:8069/odoo/action-account.action_move_in_invoice_type"
+          },
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Navigate to Accounting then Vendor Bills list"
+        },
+        {
+          "id": "S003",
+          "type": "extract_data",
+          "system_ref": "Odoo",
+          "actions": [],
+          "parameters": {},
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Extract invoice fields from input PDF via Document Understanding subflow"
+        },
+        {
+          "id": "S004",
+          "type": "transform_data",
+          "system_ref": "Odoo",
+          "actions": [],
+          "parameters": {},
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Normalize the vendor name and classify the invoice category via the in-workflow LLM agent (agent-in-workflow)"
+        },
+        {
+          "id": "S005",
+          "type": "ui_flow",
+          "system_ref": "Odoo",
+          "actions": [
+            {
+              "action": "click",
+              "target": "New button",
+              "value": null,
+              "selector_hint": null,
+              "confidence": 0.85
+            },
+            {
+              "action": "select_item",
+              "target": "Vendor dropdown",
+              "value": "{{vendor_name}}",
+              "selector_hint": null,
+              "confidence": 0.8
+            },
+            {
+              "action": "type_into",
+              "target": "Bill Reference field",
+              "value": "{{invoice_number}}",
+              "selector_hint": null,
+              "confidence": 0.85
+            },
+            {
+              "action": "type_into",
+              "target": "Bill Date field",
+              "value": "{{invoice_date}}",
+              "selector_hint": null,
+              "confidence": 0.85
+            },
+            {
+              "action": "type_into",
+              "target": "Total field",
+              "value": "{{total_amount}}",
+              "selector_hint": null,
+              "confidence": 0.85
+            },
+            {
+              "action": "click",
+              "target": "Save button",
+              "value": null,
+              "selector_hint": null,
+              "confidence": 0.9
+            }
+          ],
+          "parameters": {},
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Click New, fill the vendor bill form with extracted fields, save the bill"
+        },
+        {
+          "id": "S006",
+          "type": "api_call",
+          "system_ref": "Odoo",
+          "actions": [],
+          "parameters": {},
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Verify the created Vendor Bill exists via Odoo JSON-RPC /web/dataset/call_kw account.move/search_read"
+        },
+        {
+          "id": "S007",
+          "type": "close_application",
+          "system_ref": "Odoo",
+          "actions": [],
+          "parameters": {},
+          "uncertainty": null,
+          "substeps": [],
+          "description": "Log out and close the browser"
+        }
+      ],
+      "business_rules": [
+        {
+          "id": "BR001",
+          "condition": "Duplicate invoice number from same vendor already exists in Odoo",
+          "outcome": "business_exception",
+          "reason": "Avoid double-billing the same vendor",
+          "parameters": {}
+        },
+        {
+          "id": "BR002",
+          "condition": "Extraction confidence below 0.8",
+          "outcome": "route",
+          "reason": "Send to human validation via Action Center",
+          "parameters": {
+            "route_to": "ValidationQueue"
+          }
+        },
+        {
+          "id": "BR003",
+          "condition": "Total amount exceeds 10000",
+          "outcome": "escalate",
+          "reason": "High-value invoices require manager approval",
+          "parameters": {
+            "route_to": "ManagerApprovalQueue"
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "MaxRetryNumber": "3",
+    "LogLevel": "Info",
+    "OrchestratorQueueName": "OdooInvoices",
+    "ConfidenceThreshold": "0.8",
+    "OdooEndpoint": "http://localhost:8069",
+    "DUEndpoint": "https://du.uipath.com/document/invoices"
+  },
+  "exception_categories": [],
+  "metadata": {},
+  "document_understanding": {
+    "enabled": true,
+    "document_type": "Invoice",
+    "extraction_endpoint": "https://du.uipath.com/document/invoices",
+    "api_key_asset": "DUApiKey",
+    "confidence_threshold": 0.8,
+    "fields": [
+      "VendorName",
+      "InvoiceNumber",
+      "InvoiceDate",
+      "TotalAmount",
+      "Currency",
+      "LineItems"
+    ]
+  }
+}

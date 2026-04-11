@@ -1,0 +1,137 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="SetTransactionStatus"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+    <x:Property Name="in_TransactionItem" Type="InArgument(ui:QueueItem)" />
+    <x:Property Name="in_StatusMessage" Type="InArgument(x:String)" />
+    <x:Property Name="in_BusinessException" Type="InArgument(ui:BusinessRuleException)" />
+    <x:Property Name="in_SystemException" Type="InArgument(s:Exception)" xmlns:s="clr-namespace:System;assembly=mscorlib" />
+    <x:Property Name="io_RetryNumber" Type="InOutArgument(x:Int32)" />
+    <x:Property Name="in_MaxRetryNumber" Type="InArgument(x:Int32)" />
+  </x:Members>
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="SetTransactionStatus">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:Boolean" Default="{{ auto_retry | default('True') }}" Name="AutoRetryEnabled" />
+    </Sequence.Variables>
+
+    <!-- Check if TransactionItem exists (queue-based processing) -->
+    <If DisplayName="Check TransactionItem Exists"
+      Condition="[in_TransactionItem IsNot Nothing]">
+      <If.Then>
+        <Sequence DisplayName="Set Queue Item Status">
+
+          <!-- SUCCESS -->
+          <If DisplayName="Check Success"
+            Condition="[in_BusinessException Is Nothing AndAlso in_SystemException Is Nothing]">
+            <If.Then>
+              <Sequence DisplayName="Set Success Status">
+                <ui:SetTransactionStatus DisplayName="Set Status: Successful"
+                  ErrorType="{x:Null}"
+                  Reason=""
+                  Status="Successful"
+                  TransactionItem="[in_TransactionItem]" />
+                <ui:LogMessage DisplayName="Log Success" Level="Info"
+                  Message="[&quot;SetTransactionStatus: Transaction completed successfully&quot;]" />
+              </Sequence>
+            </If.Then>
+          </If>
+
+          <!-- BUSINESS EXCEPTION -->
+          <If DisplayName="Check Business Exception"
+            Condition="[in_BusinessException IsNot Nothing]">
+            <If.Then>
+              <Sequence DisplayName="Set Business Exception Status">
+                <ui:SetTransactionStatus DisplayName="Set Status: Business Exception"
+                  ErrorType="Business"
+                  Reason="[in_BusinessException.Message]"
+                  Status="Failed"
+                  TransactionItem="[in_TransactionItem]" />
+                <ui:LogMessage DisplayName="Log Business Exception Status" Level="Warn"
+                  Message="[&quot;SetTransactionStatus: Business Rule Exception - &quot; + in_BusinessException.Message]" />
+              </Sequence>
+            </If.Then>
+          </If>
+
+          <!-- SYSTEM EXCEPTION -->
+          <If DisplayName="Check System Exception"
+            Condition="[in_SystemException IsNot Nothing]">
+            <If.Then>
+              <Sequence DisplayName="Set System Exception Status">
+
+                <!-- Check if retry is possible -->
+                <If DisplayName="Check Retry Available"
+                  Condition="[AutoRetryEnabled AndAlso io_RetryNumber &lt; in_MaxRetryNumber]">
+                  <If.Then>
+                    <Sequence DisplayName="Retry Transaction">
+                      <ui:SetTransactionStatus DisplayName="Set Status: Retry"
+                        ErrorType="Application"
+                        Reason="[&quot;Retry &quot; + io_RetryNumber.ToString + &quot;/&quot; + in_MaxRetryNumber.ToString + &quot;: &quot; + in_SystemException.Message]"
+                        Status="Failed"
+                        TransactionItem="[in_TransactionItem]"
+                        Retry="True" />
+                      <ui:LogMessage DisplayName="Log Retry" Level="Warn"
+                        Message="[&quot;SetTransactionStatus: System Exception - Retrying (&quot; + io_RetryNumber.ToString + &quot;/&quot; + in_MaxRetryNumber.ToString + &quot;): &quot; + in_SystemException.Message]" />
+                    </Sequence>
+                  </If.Then>
+                  <If.Else>
+                    <Sequence DisplayName="Final Failure">
+                      <ui:SetTransactionStatus DisplayName="Set Status: Failed"
+                        ErrorType="Application"
+                        Reason="[&quot;Max retries exhausted: &quot; + in_SystemException.Message]"
+                        Status="Failed"
+                        TransactionItem="[in_TransactionItem]" />
+                      <ui:LogMessage DisplayName="Log Final Failure" Level="Error"
+                        Message="[&quot;SetTransactionStatus: System Exception - Max retries exhausted: &quot; + in_SystemException.Message]" />
+                    </Sequence>
+                  </If.Else>
+                </If>
+
+              </Sequence>
+            </If.Then>
+          </If>
+
+        </Sequence>
+      </If.Then>
+      <If.Else>
+        <!-- Non-queue processing: just log the status -->
+        <Sequence DisplayName="Log Non-Queue Status">
+          <If DisplayName="Check Exception Type"
+            Condition="[in_SystemException IsNot Nothing]">
+            <If.Then>
+              <ui:LogMessage DisplayName="Log System Error" Level="Error"
+                Message="[&quot;SetTransactionStatus: System Exception - &quot; + in_SystemException.Message]" />
+            </If.Then>
+          </If>
+          <If Condition="[in_BusinessException IsNot Nothing]">
+            <If.Then>
+              <ui:LogMessage DisplayName="Log Business Error" Level="Warn"
+                Message="[&quot;SetTransactionStatus: Business Rule Exception - &quot; + in_BusinessException.Message]" />
+            </If.Then>
+          </If>
+          <If Condition="[in_SystemException Is Nothing AndAlso in_BusinessException Is Nothing]">
+            <If.Then>
+              <ui:LogMessage DisplayName="Log Success (Non-Queue)" Level="Info"
+                Message="[&quot;SetTransactionStatus: Transaction completed successfully (non-queue)&quot;]" />
+            </If.Then>
+          </If>
+        </Sequence>
+      </If.Else>
+    </If>
+  </Sequence>
+</Activity>

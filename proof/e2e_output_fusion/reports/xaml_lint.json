@@ -1,0 +1,57 @@
+{
+  "Main.xaml": [
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch"
+    }
+  ],
+  "Framework/InitAllSettings.xaml": [
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch"
+    }
+  ],
+  "Framework/InitAllApplications.xaml": [],
+  "Framework/GetTransactionData.xaml": [
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch"
+    }
+  ],
+  "Framework/Process.xaml": [
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch"
+    },
+    {
+      "rule_id": "XL-B008",
+      "severity": "INFO",
+      "message": "Hardcoded TimeoutMS=30000 on 'NClick' should be Config-driven"
+    }
+  ],
+  "Framework/SetTransactionStatus.xaml": [
+    {
+      "rule_id": "XL-H005",
+      "severity": "ERROR",
+      "message": "Property 'Retry' does not exist on activity 'SetTransactionStatus'"
+    },
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch"
+    }
+  ],
+  "Framework/EndProcess.xaml": [],
+  "Framework/CloseAllApplications.xaml": [],
+  "Framework/KillAllProcesses.xaml": [
+    {
+      "rule_id": "XL-H007",
+      "severity": "ERROR",
+      "message": "Potentially invalid TypeArgument value 'sd:Process' in element 'Variable'"
+    }
+  ]
+}

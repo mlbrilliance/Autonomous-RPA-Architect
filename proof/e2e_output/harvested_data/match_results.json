@@ -1,0 +1,88 @@
+{
+  "total_actions": 7,
+  "matched_count": 6,
+  "unmatched_count": 1,
+  "match_rate_pct": 85.7,
+  "matches": [
+    {
+      "element_name": "S001_Add_Element_0",
+      "action_target": "Add Element",
+      "action_type": "click",
+      "confidence": 0.7,
+      "match_method": "heuristic_text",
+      "reasoning": "Token overlap matched via heuristic_text",
+      "element_tag": "button",
+      "element_id": "",
+      "element_type": "",
+      "element_text": "Add Element"
+    },
+    {
+      "element_name": "S002_checkbox_1_0",
+      "action_target": "checkbox 1",
+      "action_type": "check",
+      "confidence": 0.75,
+      "match_method": "enhanced_ordinal",
+      "reasoning": "Ordinal '1' matched checkbox element",
+      "element_tag": "input",
+      "element_id": "",
+      "element_type": "checkbox",
+      "element_text": null
+    },
+    {
+      "element_name": "S002_checkbox_2_1",
+      "action_target": "checkbox 2",
+      "action_type": "check",
+      "confidence": 0.7,
+      "match_method": "enhanced_single_candidate",
+      "reasoning": "Only matching element on page: input[checkbox]",
+      "element_tag": "input",
+      "element_id": "",
+      "element_type": "checkbox",
+      "element_text": null
+    },
+    {
+      "element_name": "S003_Dropdown_0",
+      "action_target": "Dropdown",
+      "action_type": "select_item",
+      "confidence": 0.95,
+      "match_method": "heuristic_id",
+      "reasoning": "Token overlap matched via heuristic_id",
+      "element_tag": "select",
+      "element_id": "dropdown",
+      "element_type": "",
+      "element_text": "Please select an option\nOption 1\nOption 2"
+    },
+    {
+      "element_name": "S004_Number_Input_0",
+      "action_target": "Number Input",
+      "action_type": "type_into",
+      "confidence": 0.7,
+      "match_method": "enhanced_single_candidate",
+      "reasoning": "Only matching element on page: input[number]",
+      "element_tag": "input",
+      "element_id": "",
+      "element_type": "number",
+      "element_text": null
+    },
+    {
+      "element_name": "S005_Input_Field_0",
+      "action_target": "Input Field",
+      "action_type": "type_into",
+      "confidence": 0.7,
+      "match_method": "enhanced_single_candidate",
+      "reasoning": "Only matching element on page: input[text]",
+      "element_tag": "input",
+      "element_id": "target",
+      "element_type": "text",
+      "element_text": null
+    }
+  ],
+  "unmatched": [
+    {
+      "step_id": "S005",
+      "index": 1,
+      "action_target": "Result",
+      "action_type": "get_text"
+    }
+  ]
+}

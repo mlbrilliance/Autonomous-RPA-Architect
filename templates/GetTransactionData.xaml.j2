@@ -1,0 +1,188 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="GetTransactionData"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+    <x:Property Name="in_TransactionNumber" Type="InArgument(x:Int32)" />
+    <x:Property Name="out_TransactionItem" Type="OutArgument(ui:QueueItem)" />
+    <x:Property Name="out_TransactionField1" Type="OutArgument(x:String)" />
+    <x:Property Name="out_TransactionField2" Type="OutArgument(x:String)" />
+    <x:Property Name="out_TransactionID" Type="OutArgument(x:String)" />
+  </x:Members>
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="GetTransactionData">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="QueueName" Default="{{ queue_name | default('') }}" />
+      <Variable x:TypeArguments="x:String" Name="ProcessType" Default="{{ process_type | default('queue_performer') }}" />
+    </Sequence.Variables>
+
+    <ui:LogMessage DisplayName="Log GetTransactionData Start" Level="Trace"
+      Message="[&quot;GetTransactionData: Getting transaction data for transaction #&quot; + in_TransactionNumber.ToString]" />
+
+    {% if process_type == 'queue_performer' %}
+    <!-- Queue-based Transaction Retrieval -->
+    <Sequence DisplayName="Get Queue Transaction">
+      <!-- Set queue name from config if not hardcoded -->
+      <If DisplayName="Check Queue Name Source"
+        Condition="[String.IsNullOrEmpty(QueueName)]">
+        <If.Then>
+          <Assign DisplayName="Get Queue Name from Config">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[QueueName]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[in_Config("OrchestratorQueueName").ToString]</InArgument>
+            </Assign.Value>
+          </Assign>
+        </If.Then>
+      </If>
+
+      <!-- Get Transaction Item from Orchestrator Queue -->
+      <ui:GetQueueItem DisplayName="Get Transaction Item"
+        QueueItemObject="[out_TransactionItem]"
+        QueueName="[QueueName]"
+        QueueFolderPath="[If(in_Config.ContainsKey(&quot;OrchestratorQueueFolder&quot;), in_Config(&quot;OrchestratorQueueFolder&quot;).ToString, &quot;&quot;)]"
+        FilterStrategy_Name="Default" />
+
+      <!-- Extract transaction fields if item exists -->
+      <If DisplayName="Check Transaction Item Retrieved"
+        Condition="[out_TransactionItem IsNot Nothing]">
+        <If.Then>
+          <Sequence DisplayName="Extract Transaction Fields">
+            <Assign DisplayName="Set TransactionID">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">[out_TransactionID]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">[out_TransactionItem.Reference]</InArgument>
+              </Assign.Value>
+            </Assign>
+
+            {% if transaction_fields %}
+            {% for field in transaction_fields %}
+            <If DisplayName="Check {{ field.name }} Exists"
+              Condition="[out_TransactionItem.SpecificContent.ContainsKey(&quot;{{ field.queue_field }}&quot;)]">
+              <If.Then>
+                <Assign DisplayName="Set {{ field.name }}">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[out_{{ field.output_var }}]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[out_TransactionItem.SpecificContent("{{ field.queue_field }}").ToString]</InArgument>
+                  </Assign.Value>
+                </Assign>
+              </If.Then>
+            </If>
+            {% endfor %}
+            {% endif %}
+
+            <ui:LogMessage DisplayName="Log Transaction Retrieved" Level="Info"
+              Message="[&quot;GetTransactionData: Retrieved transaction &quot; + out_TransactionID]" />
+          </Sequence>
+        </If.Then>
+        <If.Else>
+          <ui:LogMessage DisplayName="Log No More Items" Level="Info"
+            Message="[&quot;GetTransactionData: No more items in queue '&quot; + QueueName + &quot;'&quot;]" />
+        </If.Else>
+      </If>
+    </Sequence>
+
+    {% elif process_type == 'datatable' %}
+    <!-- DataTable-based Transaction Retrieval -->
+    <Sequence DisplayName="Get DataTable Transaction">
+      <If DisplayName="Check More Rows Available"
+        Condition="[in_TransactionNumber &lt; CType(in_Config(&quot;TransactionData&quot;), System.Data.DataTable).Rows.Count]">
+        <If.Then>
+          <Sequence DisplayName="Get Row Data">
+            <Assign DisplayName="Set TransactionField1">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">[out_TransactionField1]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">[CType(in_Config("TransactionData"), System.Data.DataTable).Rows(in_TransactionNumber)(0).ToString]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <Assign DisplayName="Set TransactionID">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">[out_TransactionID]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">[in_TransactionNumber.ToString]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <!-- Create a placeholder QueueItem-like marker so the state machine knows we have data -->
+            <ui:LogMessage DisplayName="Log DataTable Row" Level="Info"
+              Message="[&quot;GetTransactionData: Processing row &quot; + in_TransactionNumber.ToString]" />
+          </Sequence>
+        </If.Then>
+        <If.Else>
+          <Sequence DisplayName="No More Data">
+            <Assign DisplayName="Set TransactionItem Nothing">
+              <Assign.To>
+                <OutArgument x:TypeArguments="ui:QueueItem">[out_TransactionItem]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="ui:QueueItem">[Nothing]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <ui:LogMessage DisplayName="Log No More Data" Level="Info"
+              Message="[&quot;GetTransactionData: No more data rows to process&quot;]" />
+          </Sequence>
+        </If.Else>
+      </If>
+    </Sequence>
+
+    {% else %}
+    <!-- Generic Transaction Retrieval Pattern -->
+    <Sequence DisplayName="Get Transaction - Generic">
+      <ui:LogMessage DisplayName="Log Generic Get Transaction" Level="Info"
+        Message="[&quot;GetTransactionData: Implement custom transaction retrieval logic here&quot;]" />
+
+      <!-- Default: Set TransactionItem to Nothing to end processing after first run -->
+      <If DisplayName="Check First Run"
+        Condition="[in_TransactionNumber = 0]">
+        <If.Then>
+          <Sequence DisplayName="First Transaction">
+            <Assign DisplayName="Set TransactionID">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">[out_TransactionID]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">[&quot;Transaction_&quot; + in_TransactionNumber.ToString]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <ui:LogMessage DisplayName="Log First Transaction" Level="Info"
+              Message="[&quot;GetTransactionData: Processing single transaction&quot;]" />
+          </Sequence>
+        </If.Then>
+        <If.Else>
+          <Sequence DisplayName="End Processing">
+            <Assign DisplayName="Clear TransactionItem">
+              <Assign.To>
+                <OutArgument x:TypeArguments="ui:QueueItem">[out_TransactionItem]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="ui:QueueItem">[Nothing]</InArgument>
+              </Assign.Value>
+            </Assign>
+          </Sequence>
+        </If.Else>
+      </If>
+    </Sequence>
+    {% endif %}
+  </Sequence>
+</Activity>

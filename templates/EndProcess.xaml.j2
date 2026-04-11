@@ -1,0 +1,145 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="EndProcess"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+    <x:Property Name="in_SystemException" Type="InArgument(s:Exception)" xmlns:s="clr-namespace:System;assembly=mscorlib" />
+    <x:Property Name="in_TransactionNumber" Type="InArgument(x:Int32)" />
+  </x:Members>
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="EndProcess">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="SummaryMessage" />
+      <Variable x:TypeArguments="x:String" Name="ProcessStatus" />
+    </Sequence.Variables>
+
+    <ui:LogMessage DisplayName="Log EndProcess Start" Level="Info"
+      Message="[&quot;EndProcess: Starting end process cleanup&quot;]" />
+
+    <!-- Determine process outcome -->
+    <If DisplayName="Check Process Outcome"
+      Condition="[in_SystemException Is Nothing]">
+      <If.Then>
+        <Sequence DisplayName="Process Succeeded">
+          <Assign DisplayName="Set Success Status">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[ProcessStatus]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[&quot;Success&quot;]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Build Success Summary">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[SummaryMessage]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[&quot;{{ project_name | default('Process') }} completed successfully. Transactions processed: &quot; + in_TransactionNumber.ToString]</InArgument>
+            </Assign.Value>
+          </Assign>
+        </Sequence>
+      </If.Then>
+      <If.Else>
+        <Sequence DisplayName="Process Failed">
+          <Assign DisplayName="Set Failure Status">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[ProcessStatus]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[&quot;Failed&quot;]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Build Failure Summary">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[SummaryMessage]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[&quot;{{ project_name | default('Process') }} failed with error: &quot; + in_SystemException.Message + &quot;. Transactions processed before failure: &quot; + in_TransactionNumber.ToString]</InArgument>
+            </Assign.Value>
+          </Assign>
+        </Sequence>
+      </If.Else>
+    </If>
+
+    <!-- Close all applications gracefully -->
+    <TryCatch DisplayName="Try Close Applications">
+      <TryCatch.Try>
+        <ui:InvokeWorkflowFile DisplayName="Invoke CloseAllApplications"
+          FilePath="Framework\CloseAllApplications.xaml"
+          UnSafe="False" />
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="closeEx" />
+            </ActivityAction.Argument>
+            <Sequence DisplayName="Handle Close Error">
+              <ui:LogMessage DisplayName="Log Close Error" Level="Warn"
+                Message="[&quot;EndProcess: Error closing applications - &quot; + closeEx.Message + &quot;. Attempting to kill processes.&quot;]" />
+              <ui:InvokeWorkflowFile DisplayName="Invoke KillAllProcesses"
+                FilePath="Framework\KillAllProcesses.xaml"
+                UnSafe="False" />
+            </Sequence>
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    {% if send_notification %}
+    <!-- Send Summary Notification -->
+    <TryCatch DisplayName="Try Send Notification">
+      <TryCatch.Try>
+        <Sequence DisplayName="Send Summary Email">
+          <If DisplayName="Check Notification Config"
+            Condition="[in_Config.ContainsKey(&quot;NotificationEmail&quot;) AndAlso Not String.IsNullOrEmpty(in_Config(&quot;NotificationEmail&quot;).ToString)]">
+            <If.Then>
+              <ui:SendSmtpMailMessage DisplayName="Send Summary Email"
+                Subject="[&quot;{{ project_name | default('Process') }} - &quot; + ProcessStatus + &quot; - &quot; + DateTime.Now.ToString(&quot;yyyy-MM-dd HH:mm&quot;)]"
+                Body="[SummaryMessage]"
+                To="[in_Config(&quot;NotificationEmail&quot;).ToString]"
+                From="[If(in_Config.ContainsKey(&quot;SenderEmail&quot;), in_Config(&quot;SenderEmail&quot;).ToString, &quot;rpa@company.com&quot;)]"
+                Host="[If(in_Config.ContainsKey(&quot;SmtpServer&quot;), in_Config(&quot;SmtpServer&quot;).ToString, &quot;smtp.company.com&quot;)]"
+                Port="[If(in_Config.ContainsKey(&quot;SmtpPort&quot;), Convert.ToInt32(in_Config(&quot;SmtpPort&quot;)), 587)]" />
+              <ui:LogMessage DisplayName="Log Notification Sent" Level="Info"
+                Message="[&quot;EndProcess: Summary notification sent to &quot; + in_Config(&quot;NotificationEmail&quot;).ToString]" />
+            </If.Then>
+          </If>
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="notifEx" />
+            </ActivityAction.Argument>
+            <ui:LogMessage DisplayName="Log Notification Error" Level="Warn"
+              Message="[&quot;EndProcess: Failed to send notification email - &quot; + notifEx.Message]" />
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+    {% endif %}
+
+    <!-- Log final summary -->
+    <ui:LogMessage DisplayName="Log Process Summary" Level="Info"
+      Message="[SummaryMessage]" />
+
+    <ui:LogMessage DisplayName="Log EndProcess Complete" Level="Info"
+      Message="[&quot;EndProcess: Cleanup completed. Final status: &quot; + ProcessStatus]" />
+  </Sequence>
+</Activity>

@@ -1,0 +1,124 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="Process"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+    <x:Property Name="in_TransactionItem" Type="InArgument(ui:QueueItem)" />
+    <x:Property Name="in_TransactionField1" Type="InArgument(x:String)" />
+    <x:Property Name="in_TransactionField2" Type="InArgument(x:String)" />
+    <x:Property Name="in_TransactionID" Type="InArgument(x:String)" />
+  </x:Members>
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="Process Transaction">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="StepName" Default="[&quot;&quot;]" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="StepNumber" />
+    </Sequence.Variables>
+
+    <ui:LogMessage DisplayName="Log Process Start" Level="Info"
+      Message="[&quot;Process: Starting process for transaction &quot; + in_TransactionID]" />
+
+    <TryCatch DisplayName="Process Try-Catch">
+      <TryCatch.Try>
+        <Sequence DisplayName="Process Steps">
+
+          {% for workflow_name in workflow_names %}
+          <!-- Step {{ loop.index }}: {{ workflow_name }} -->
+          <Assign DisplayName="Set Step {{ loop.index }}">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[StepName]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[&quot;{{ workflow_name }}&quot;]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Set StepNumber {{ loop.index }}">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:Int32">[StepNumber]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:Int32">{{ loop.index }}</InArgument>
+            </Assign.Value>
+          </Assign>
+
+          <ui:LogMessage DisplayName="Log Step {{ loop.index }} Start" Level="Info"
+            Message="[&quot;Process: Step &quot; + StepNumber.ToString + &quot; - Executing {{ workflow_name }}&quot;]" />
+
+          <ui:InvokeWorkflowFile DisplayName="Invoke {{ workflow_name }}"
+            FilePath="{{ workflow_name }}.xaml"
+            UnSafe="False">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)"
+                x:Key="in_Config">[in_Config]</InArgument>
+              <InArgument x:TypeArguments="ui:QueueItem"
+                x:Key="in_TransactionItem">[in_TransactionItem]</InArgument>
+              <InArgument x:TypeArguments="x:String"
+                x:Key="in_TransactionField1">[in_TransactionField1]</InArgument>
+              <InArgument x:TypeArguments="x:String"
+                x:Key="in_TransactionField2">[in_TransactionField2]</InArgument>
+              <InArgument x:TypeArguments="x:String"
+                x:Key="in_TransactionID">[in_TransactionID]</InArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+
+          <ui:LogMessage DisplayName="Log Step {{ loop.index }} Complete" Level="Info"
+            Message="[&quot;Process: Step &quot; + StepNumber.ToString + &quot; - {{ workflow_name }} completed successfully&quot;]" />
+
+          {% endfor %}
+          {% if not workflow_names %}
+          <!-- Placeholder: Add process workflow invocations here -->
+          <ui:LogMessage DisplayName="Log No Workflows" Level="Warn"
+            Message="[&quot;Process: No workflow steps configured. Add process logic here.&quot;]" />
+          {% endif %}
+
+          <ui:LogMessage DisplayName="Log All Steps Complete" Level="Info"
+            Message="[&quot;Process: All steps completed successfully for transaction &quot; + in_TransactionID]" />
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <!-- Business Rule Exception - rethrow -->
+        <Catch x:TypeArguments="ui:BusinessRuleException">
+          <ActivityAction x:TypeArguments="ui:BusinessRuleException">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="ui:BusinessRuleException" Name="businessEx" />
+            </ActivityAction.Argument>
+            <Sequence DisplayName="Handle Business Exception">
+              <ui:LogMessage DisplayName="Log Business Exception" Level="Warn"
+                Message="[&quot;Process: Business Rule Exception at step '&quot; + StepName + &quot;': &quot; + businessEx.Message]" />
+              <Throw DisplayName="Rethrow Business Exception"
+                Exception="[businessEx]" />
+            </Sequence>
+          </ActivityAction>
+        </Catch>
+        <!-- System Exception - rethrow -->
+        <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="sysEx" />
+            </ActivityAction.Argument>
+            <Sequence DisplayName="Handle System Exception">
+              <ui:LogMessage DisplayName="Log System Exception" Level="Error"
+                Message="[&quot;Process: System Exception at step '&quot; + StepName + &quot;' (step &quot; + StepNumber.ToString + &quot;): &quot; + sysEx.Message]" />
+              <Throw DisplayName="Rethrow System Exception"
+                Exception="[New System.Exception(&quot;Process failed at step '&quot; + StepName + &quot;': &quot; + sysEx.Message, sysEx)]" />
+            </Sequence>
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+  </Sequence>
+</Activity>

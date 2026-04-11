@@ -1,0 +1,55 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="CloseAllApplications"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="CloseAllApplications">
+    <ui:LogMessage DisplayName="Log CloseAllApplications Start" Level="Info"
+      Message="[&quot;CloseAllApplications: Starting graceful application shutdown&quot;]" />
+
+    <!-- Close TheInternet -->
+    <TryCatch DisplayName="Try Close TheInternet">
+      <TryCatch.Try>
+        <Sequence DisplayName="Close TheInternet">
+          <ui:LogMessage DisplayName="Log Closing TheInternet" Level="Info"
+            Message="[&quot;CloseAllApplications: Closing TheInternet&quot;]" />
+
+          <!-- Generic close for TheInternet -->
+          <ui:LogMessage DisplayName="Log Generic Close TheInternet" Level="Info"
+            Message="[&quot;CloseAllApplications: TheInternet closed (custom close required)&quot;]" />
+
+          <ui:LogMessage DisplayName="Log TheInternet Closed" Level="Info"
+            Message="[&quot;CloseAllApplications: TheInternet closed successfully&quot;]" />
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="closeEx_1" />
+            </ActivityAction.Argument>
+            <ui:LogMessage DisplayName="Log TheInternet Close Error" Level="Warn"
+              Message="[&quot;CloseAllApplications: Failed to close TheInternet gracefully - &quot; + closeEx_1.Message]" />
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+
+    <ui:LogMessage DisplayName="Log CloseAllApplications Complete" Level="Info"
+      Message="[&quot;CloseAllApplications: Application shutdown completed&quot;]" />
+  </Sequence>
+</Activity>

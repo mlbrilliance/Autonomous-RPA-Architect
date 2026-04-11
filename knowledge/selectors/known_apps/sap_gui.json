@@ -1,0 +1,132 @@
+{
+  "application": "SAP GUI for Windows",
+  "type": "desktop",
+  "executable": "saplogon.exe",
+  "window_class": "SAP_FRONTEND_SESSION",
+  "notes": [
+    "SAP GUI selectors use automationid with technical path notation: /app/con[N]/ses[N]/wnd[N]/...",
+    "con[N] = connection index, ses[N] = session index, wnd[N] = window index (0 = main, 1+ = popups).",
+    "tbar[0] = main toolbar, tbar[1] = application toolbar.",
+    "usr/ = user area (main content), titl/ = titlebar area.",
+    "Field technical names follow SAP naming: program-fieldname (e.g., RSYST-BNAME).",
+    "Always use the UiPath SAP integration plugin for best reliability.",
+    "SAP Scripting must be enabled: RZ11 -> sapgui/user_scripting = TRUE.",
+    "Session indices may vary if multiple SAP sessions are open -- parameterize con and ses indices."
+  ],
+  "selectors": {
+    "transaction_code_field": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/tbar[0]/okcd' />",
+      "description": "Transaction code input field (command bar at top of SAP window). Type /nXXXX and press Enter to navigate.",
+      "stability": "high",
+      "category": "navigation"
+    },
+    "enter_button": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/tbar[0]/btn[0]' />",
+      "description": "Enter/Continue button on the main toolbar (green checkmark)",
+      "stability": "high",
+      "category": "toolbar"
+    },
+    "save_button": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/tbar[0]/btn[11]' />",
+      "description": "Save button (floppy disk icon) on the main toolbar (Ctrl+S)",
+      "stability": "high",
+      "category": "toolbar"
+    },
+    "back_button": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/tbar[0]/btn[3]' />",
+      "description": "Back button (green arrow) on the main toolbar (F3)",
+      "stability": "high",
+      "category": "toolbar"
+    },
+    "exit_button": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/tbar[0]/btn[15]' />",
+      "description": "Exit/Cancel button (red X) on the main toolbar (Shift+F3)",
+      "stability": "high",
+      "category": "toolbar"
+    },
+    "cancel_button": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/tbar[0]/btn[12]' />",
+      "description": "Cancel button on the main toolbar (F12)",
+      "stability": "high",
+      "category": "toolbar"
+    },
+    "username_field": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/usr/txtRSYST-BNAME' />",
+      "description": "Username input field on SAP logon screen",
+      "stability": "high",
+      "category": "login"
+    },
+    "password_field": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/usr/pwdRSYST-BCODE' />",
+      "description": "Password input field on SAP logon screen",
+      "stability": "high",
+      "category": "login"
+    },
+    "client_field": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/usr/txtRSYST-MANDT' />",
+      "description": "Client/Mandant number input field on SAP logon screen",
+      "stability": "high",
+      "category": "login"
+    },
+    "language_field": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/usr/txtRSYST-LANGU' />",
+      "description": "Language input field on SAP logon screen",
+      "stability": "high",
+      "category": "login"
+    },
+    "text_input_field": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/usr/txt{{fieldName}}' />",
+      "description": "Generic text input field parameterized by SAP technical field name (e.g., VBAK-VBELN)",
+      "stability": "high",
+      "category": "input",
+      "parameters": ["fieldName"]
+    },
+    "combobox_field": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/usr/cmb{{fieldName}}' />",
+      "description": "Dropdown/combobox field in the user area",
+      "stability": "high",
+      "category": "input",
+      "parameters": ["fieldName"]
+    },
+    "table_cell_text": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/usr/tbl{{tableName}}/txt{{fieldName}}[{{col}},{{row}}]' />",
+      "description": "Display-only text cell in a SAP table control. col and row are 0-based.",
+      "stability": "medium",
+      "category": "table",
+      "parameters": ["tableName", "fieldName", "col", "row"]
+    },
+    "table_cell_input": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/usr/tbl{{tableName}}/ctxt{{fieldName}}[{{col}},{{row}}]' />",
+      "description": "Editable input cell in a SAP table control. col and row are 0-based.",
+      "stability": "medium",
+      "category": "table",
+      "parameters": ["tableName", "fieldName", "col", "row"]
+    },
+    "alv_grid_shell": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/usr/cntlGRID/shellcont/shell' />",
+      "description": "ALV Grid control (shell container). Use GetCellValue/SetCellValue for cell access.",
+      "stability": "medium",
+      "category": "table",
+      "notes": "For ALV grids, interact via the shell object methods rather than individual cell selectors."
+    },
+    "status_bar": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/sbar' />",
+      "description": "Status bar at the bottom of the SAP window. Read text to detect success/error messages.",
+      "stability": "high",
+      "category": "status"
+    },
+    "popup_dialog_continue": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[1]/tbar[0]/btn[0]' />",
+      "description": "Continue/Enter button on a SAP popup dialog (wnd[1] = first popup)",
+      "stability": "high",
+      "category": "dialog"
+    },
+    "app_toolbar_button": {
+      "selector": "<wnd app='saplogon.exe' cls='SAP_FRONTEND_SESSION' /><ctrl automationid='/app/con[0]/ses[0]/wnd[0]/tbar[1]/btn[{{index}}]' />",
+      "description": "Button on the application toolbar (tbar[1]). Index is 0-based, varies by transaction.",
+      "stability": "medium",
+      "category": "toolbar",
+      "parameters": ["index"]
+    }
+  }
+}

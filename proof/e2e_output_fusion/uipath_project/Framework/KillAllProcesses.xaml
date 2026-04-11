@@ -1,0 +1,55 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="KillAllProcesses"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:s="clr-namespace:System;assembly=mscorlib"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:sd="clr-namespace:System.Diagnostics;assembly=System"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Diagnostics" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="KillAllProcesses">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:Process()" Name="RunningProcesses" />
+    </Sequence.Variables>
+
+    <ui:LogMessage DisplayName="Log KillAllProcesses Start" Level="Info"
+      Message="[&quot;KillAllProcesses: Starting force kill of application processes&quot;]" />
+
+    <!-- Kill chrome -->
+    <TryCatch DisplayName="Try Kill chrome">
+      <TryCatch.Try>
+        <Sequence DisplayName="Kill chrome">
+          <ui:KillProcess DisplayName="Kill chrome"
+            ProcessName="chrome" />
+          <ui:LogMessage DisplayName="Log chrome Killed" Level="Info"
+            Message="[&quot;KillAllProcesses: chrome process killed&quot;]" />
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="killEx_1" />
+            </ActivityAction.Argument>
+            <ui:LogMessage DisplayName="Log chrome Kill Error" Level="Warn"
+              Message="[&quot;KillAllProcesses: Could not kill chrome - &quot; + killEx_1.Message]" />
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+
+    <ui:LogMessage DisplayName="Log KillAllProcesses Complete" Level="Info"
+      Message="[&quot;KillAllProcesses: Force kill completed&quot;]" />
+  </Sequence>
+</Activity>

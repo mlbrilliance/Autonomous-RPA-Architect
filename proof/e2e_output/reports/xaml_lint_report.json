@@ -1,0 +1,190 @@
+{
+  "Main.xaml": [
+    {
+      "rule_id": "XL-B002",
+      "severity": "INFO",
+      "message": "Workflow contains no LogMessage activities",
+      "suggestion": "Add LogMessage activities at key points (start, end, before/after critical operations) for observability and debugging. At minimum, log workflow start and completion."
+    },
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    }
+  ],
+  "Framework/InitAllSettings.xaml": [
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    }
+  ],
+  "Framework/InitAllApplications.xaml": [
+    {
+      "rule_id": "XL-B002",
+      "severity": "INFO",
+      "message": "Workflow contains no LogMessage activities",
+      "suggestion": "Add LogMessage activities at key points (start, end, before/after critical operations) for observability and debugging. At minimum, log workflow start and completion."
+    },
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    }
+  ],
+  "Framework/GetTransactionData.xaml": [
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    }
+  ],
+  "Framework/Process.xaml": [
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    },
+    {
+      "rule_id": "XL-B008",
+      "severity": "INFO",
+      "message": "Hardcoded TimeoutMS=30000 on 'NClick' should be Config-driven",
+      "suggestion": "Store timeout values in Config.xlsx. Use CInt(in_Config(\"TimeoutMS\")) to reference them. Different environments may need different timeout values."
+    }
+  ],
+  "Framework/SetTransactionStatus.xaml": [
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    }
+  ],
+  "Framework/EndProcess.xaml": [
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    }
+  ],
+  "Framework/CloseAllApplications.xaml": [
+    {
+      "rule_id": "XL-B002",
+      "severity": "INFO",
+      "message": "Workflow contains no LogMessage activities",
+      "suggestion": "Add LogMessage activities at key points (start, end, before/after critical operations) for observability and debugging. At minimum, log workflow start and completion."
+    },
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    }
+  ],
+  "Framework/KillAllProcesses.xaml": [
+    {
+      "rule_id": "XL-B002",
+      "severity": "INFO",
+      "message": "Workflow contains no LogMessage activities",
+      "suggestion": "Add LogMessage activities at key points (start, end, before/after critical operations) for observability and debugging. At minimum, log workflow start and completion."
+    },
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    }
+  ],
+  "Process_WithActivities.xaml": [
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-H001",
+      "severity": "ERROR",
+      "message": "Unknown activity 'Target' is not a recognized UiPath activity",
+      "suggestion": "Check if 'Target' is a valid UiPath activity name. Common LLM mistakes include inventing activities like 'ReadExcel' (should be 'ReadRange'), 'ClickButton' (should be 'NClick'), or 'SetVariable' (should be 'Assign')."
+    },
+    {
+      "rule_id": "XL-B004",
+      "severity": "INFO",
+      "message": "Top-level workflow body does not contain a TryCatch",
+      "suggestion": "Wrap the main workflow logic in a TryCatch to handle unexpected errors. The Catch block should log the error and optionally take a screenshot for debugging."
+    },
+    {
+      "rule_id": "XL-B008",
+      "severity": "INFO",
+      "message": "Hardcoded TimeoutMS=30000 on 'NClick' should be Config-driven",
+      "suggestion": "Store timeout values in Config.xlsx. Use CInt(in_Config(\"TimeoutMS\")) to reference them. Different environments may need different timeout values."
+    }
+  ]
+}

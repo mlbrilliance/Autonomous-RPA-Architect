@@ -1,0 +1,50 @@
+using System;
+using System.Collections.Generic;
+using UiPath.CodedWorkflows;
+using UiPath.Orchestrator.Client.Models;
+
+namespace {{ namespace }}
+{
+    /// <summary>
+    /// Data Transfer Object for {{ transaction_name }} transaction.
+    /// </summary>
+    public class {{ class_name }}
+    {
+        {% for field in fields %}
+        /// <summary>{{ field.description }}</summary>
+        public {{ field.csharp_type }} {{ field.name }} { get; set; }
+        {% endfor %}
+
+        /// <summary>
+        /// Create DTO from Orchestrator queue item specific content.
+        /// </summary>
+        public static {{ class_name }} FromQueueItem(QueueItemDataDto item)
+        {
+            var dto = new {{ class_name }}();
+            var content = item.SpecificContent;
+            {% for field in fields %}
+            if (content.ContainsKey("{{ field.key }}"))
+                dto.{{ field.name }} = {% if field.csharp_type == "string" %}content["{{ field.key }}"]?.ToString(){% elif field.csharp_type == "int" %}Convert.ToInt32(content["{{ field.key }}"]){% elif field.csharp_type == "decimal" %}Convert.ToDecimal(content["{{ field.key }}"]){% elif field.csharp_type == "bool" %}Convert.ToBoolean(content["{{ field.key }}"]){% elif field.csharp_type == "DateTime" %}Convert.ToDateTime(content["{{ field.key }}"]){% else %}({{ field.csharp_type }})content["{{ field.key }}"]{% endif %};
+            {% endfor %}
+            return dto;
+        }
+
+        /// <summary>
+        /// Convert DTO to dictionary for queue item creation.
+        /// </summary>
+        public Dictionary<string, object> ToDictionary()
+        {
+            return new Dictionary<string, object>
+            {
+                {% for field in fields %}
+                { "{{ field.key }}", {{ field.name }} }{{ "," if not loop.last else "" }}
+                {% endfor %}
+            };
+        }
+
+        public override string ToString()
+        {
+            return $"{{ class_name }}({% for field in fields %}{{ field.name }}={{ '{' }}{{ field.name }}{{ '}' }}{{ ', ' if not loop.last else '' }}{% endfor %})";
+        }
+    }
+}

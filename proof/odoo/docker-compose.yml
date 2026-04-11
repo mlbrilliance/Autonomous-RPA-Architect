@@ -1,0 +1,56 @@
+version: "3.8"
+
+# Local Odoo Community for end-to-end UiPath testing.
+#
+# Usage:
+#   cd proof/odoo
+#   cp .env.example .env                # set OD_DB_PASSWORD to anything you want
+#   docker compose --env-file .env up -d
+#   # Wait ~30s for Odoo to initialise, then visit http://localhost:8069.
+#   # First time only: create a database via the web UI (any name, demo data ON).
+#   # Then run: python proof/odoo/seed_database.py
+#
+# To expose to UiPath Community Cloud robots, run cloudflared in another terminal:
+#   cloudflared tunnel --url http://localhost:8069
+# and copy the https://*.trycloudflare.com URL into your .env as ODOO_PUBLIC_URL.
+#
+# Security note: ALL credentials here are read from the environment, never
+# baked into the YAML. The .env file is gitignored. Do not commit secrets.
+
+services:
+  odoo-db:
+    image: postgres:15-alpine
+    container_name: odoo-db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ${OD_DB_USER:?set OD_DB_USER in proof/odoo/.env}
+      POSTGRES_PASSWORD: ${OD_DB_PASSWORD:?set OD_DB_PASSWORD in proof/odoo/.env}
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${OD_DB_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  odoo:
+    image: odoo:17.0
+    container_name: odoo-web
+    depends_on:
+      odoo-db:
+        condition: service_healthy
+    ports:
+      - "8069:8069"
+      - "8072:8072"  # longpolling
+    environment:
+      HOST: odoo-db
+      USER: ${OD_DB_USER:?set OD_DB_USER in proof/odoo/.env}
+      PASSWORD: ${OD_DB_PASSWORD:?set OD_DB_PASSWORD in proof/odoo/.env}
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons
+    command: ["--init=base", "--without-demo=False"]
+
+volumes:
+  odoo-db-data:
+  odoo-web-data:

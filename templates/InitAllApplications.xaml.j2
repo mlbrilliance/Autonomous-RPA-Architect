@@ -1,0 +1,106 @@
+<Activity mc:Ignorable="sap sap2010 sads" x:Class="InitAllApplications"
+  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+  xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+  xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+  xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+  xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+  xmlns:ui="http://schemas.uipath.com/workflow/activities"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+  </x:Members>
+  <mva:VisualBasic.Settings>
+    <mva:VisualBasicSettings>
+      <mva:VisualBasicImportReference Import="System" />
+      <mva:VisualBasicImportReference Import="System.Collections.Generic" />
+      <mva:VisualBasicImportReference Import="UiPath.Core" />
+      <mva:VisualBasicImportReference Import="UiPath.Core.Activities" />
+    </mva:VisualBasicSettings>
+  </mva:VisualBasic.Settings>
+  <Sequence DisplayName="InitAllApplications">
+    <ui:LogMessage DisplayName="Log InitAllApplications Start" Level="Info"
+      Message="[&quot;InitAllApplications: Starting application initialization&quot;]" />
+
+    {% for system in systems %}
+    <!-- Initialize {{ system.name }} -->
+    <TryCatch DisplayName="Try Initialize {{ system.name }}">
+      <TryCatch.Try>
+        <Sequence DisplayName="Initialize {{ system.name }}">
+          <ui:LogMessage DisplayName="Log Opening {{ system.name }}" Level="Info"
+            Message="[&quot;InitAllApplications: Opening {{ system.name }}&quot;]" />
+
+          {% if system.type == 'browser' %}
+          <!-- Open Browser for {{ system.name }} -->
+          <ui:OpenBrowser DisplayName="Open {{ system.name }}"
+            BrowserType="{{ system.browser_type | default('Chrome') }}"
+            Url="[in_Config(&quot;{{ system.url_config_key | default(system.name + '_URL') }}&quot;).ToString]"
+            UiBrowser="[Nothing]">
+            <ui:OpenBrowser.Body>
+              <ActivityAction x:TypeArguments="x:Object">
+                <ActivityAction.Argument>
+                  <DelegateInArgument x:TypeArguments="x:Object" Name="context_{{ system.name | lower | replace(' ', '_') }}" />
+                </ActivityAction.Argument>
+                <Sequence DisplayName="Browser Actions">
+                  <ui:LogMessage DisplayName="Log Browser Opened" Level="Info"
+                    Message="[&quot;InitAllApplications: {{ system.name }} browser opened successfully&quot;]" />
+                </Sequence>
+              </ActivityAction>
+            </ui:OpenBrowser.Body>
+          </ui:OpenBrowser>
+          {% elif system.type == 'desktop' %}
+          <!-- Open Desktop Application {{ system.name }} -->
+          <ui:OpenApplication DisplayName="Open {{ system.name }}"
+            FileName="[in_Config(&quot;{{ system.exe_config_key | default(system.name + '_Path') }}&quot;).ToString]"
+            Arguments="{{ system.arguments | default('') }}">
+            <ui:OpenApplication.Body>
+              <ActivityAction x:TypeArguments="x:Object">
+                <ActivityAction.Argument>
+                  <DelegateInArgument x:TypeArguments="x:Object" Name="context_{{ system.name | lower | replace(' ', '_') }}" />
+                </ActivityAction.Argument>
+                <Sequence DisplayName="App Actions">
+                  <ui:LogMessage DisplayName="Log App Opened" Level="Info"
+                    Message="[&quot;InitAllApplications: {{ system.name }} application opened successfully&quot;]" />
+                </Sequence>
+              </ActivityAction>
+            </ui:OpenApplication.Body>
+          </ui:OpenApplication>
+          {% else %}
+          <!-- Generic initialization for {{ system.name }} -->
+          <ui:LogMessage DisplayName="Log {{ system.name }} Init" Level="Info"
+            Message="[&quot;InitAllApplications: {{ system.name }} initialized (custom init required)&quot;]" />
+          {% endif %}
+
+          <ui:LogMessage DisplayName="Log {{ system.name }} Ready" Level="Info"
+            Message="[&quot;InitAllApplications: {{ system.name }} is ready&quot;]" />
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" xmlns:s="clr-namespace:System;assembly=mscorlib">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="initException_{{ loop.index }}" />
+            </ActivityAction.Argument>
+            <Sequence DisplayName="Handle {{ system.name }} Init Error">
+              <ui:LogMessage DisplayName="Log {{ system.name }} Init Error" Level="Error"
+                Message="[&quot;InitAllApplications: Failed to initialize {{ system.name }} - &quot; + initException_{{ loop.index }}.Message]" />
+              <Throw DisplayName="Re-throw {{ system.name }} Error"
+                Exception="[New System.Exception(&quot;Failed to initialize {{ system.name }}: &quot; + initException_{{ loop.index }}.Message, initException_{{ loop.index }})]" />
+            </Sequence>
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    {% endfor %}
+    {% if not systems %}
+    <!-- Placeholder: Add application initialization steps here -->
+    <ui:LogMessage DisplayName="Log No Applications Configured" Level="Info"
+      Message="[&quot;InitAllApplications: No applications configured for initialization&quot;]" />
+    {% endif %}
+
+    <ui:LogMessage DisplayName="Log InitAllApplications Complete" Level="Info"
+      Message="[&quot;InitAllApplications: All applications initialized successfully&quot;]" />
+  </Sequence>
+</Activity>
