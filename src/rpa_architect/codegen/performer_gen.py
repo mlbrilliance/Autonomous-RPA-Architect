@@ -381,16 +381,15 @@ namespace {namespace}
 def generate_performer_set_transaction_status_state_cs(
     namespace: str = DEFAULT_NAMESPACE,
 ) -> str:
-    return f"""using System.Threading.Tasks;
+    return f"""using System;
+using System.Threading.Tasks;
 
 namespace {namespace}
 {{
     /// <summary>
-    /// Finalises the leased queue transaction. Auto-approved and
-    /// flag-for-review claims are marked Successful; Deny verdicts are
-    /// still Successful from an Orchestrator perspective (the rule ran
-    /// to completion — the verdict is the business outcome, not an error).
-    /// True business failures happen upstream in the state transitions.
+    /// Updates the case status in SuiteCRM after adjudication. BW-19
+    /// workaround: we PATCH SuiteCRM directly instead of calling
+    /// SetTransactionResult (which needs robot-session context).
     /// </summary>
     public class PerformerSetTransactionStatusState : IState
     {{

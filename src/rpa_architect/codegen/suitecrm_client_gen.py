@@ -322,7 +322,7 @@ namespace {namespace}
         {{
             var resp = await SendAsync(
                 HttpMethod.Get,
-                $"/Api/V8/module/Accounts?filter%5Bname%5D={{Uri.EscapeDataString(policyNumber)}}");
+                $"/Api/V8/module/Accounts?filter%5Bname%5D%5Beq%5D={{Uri.EscapeDataString(policyNumber)}}");
             if (resp.StatusCode == HttpStatusCode.NotFound)
                 throw new BusinessException($"Policy {{policyNumber}} not found");
             resp.EnsureSuccessStatusCode();
@@ -352,7 +352,7 @@ namespace {namespace}
         {{
             var resp = await SendAsync(
                 HttpMethod.Get,
-                $"/Api/V8/module/Accounts?filter%5Bname%5D={{Uri.EscapeDataString(npi)}}");
+                $"/Api/V8/module/Accounts?filter%5Bname%5D%5Beq%5D={{Uri.EscapeDataString(npi)}}");
             if (resp.StatusCode == HttpStatusCode.NotFound)
                 throw new BusinessException($"Provider {{npi}} not found");
             resp.EnsureSuccessStatusCode();
@@ -426,7 +426,7 @@ namespace {namespace}
         {{
             var resp = await SendAsync(
                 HttpMethod.Get,
-                $"/Api/V8/module/Notes?filter%5Bparent_type%5D=Cases&filter%5Bparent_id%5D={{Uri.EscapeDataString(caseId)}}");
+                $"/Api/V8/module/Notes?filter%5Bparent_type%5D%5Beq%5D=Cases&filter%5Bparent_id%5D%5Beq%5D={{Uri.EscapeDataString(caseId)}}");
             if (!resp.IsSuccessStatusCode) return new List<string>();
 
             var json = await resp.Content.ReadAsStringAsync();
