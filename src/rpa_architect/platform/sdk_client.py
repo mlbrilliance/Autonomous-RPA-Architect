@@ -298,10 +298,14 @@ class UiPathClient:
             f"{self._base_url_sync()}/"
             "Queues/UiPathODataSvc.StartTransaction"
         )
+        # OData $metadata: QueuesStartTransactionRequest.transactionData
+        # has property "Name" (queue name). RobotIdentifier is NOT in the
+        # schema — it's auto-populated from the robot context when called
+        # from inside a UiPath job. External API clients get 204 (no items)
+        # because they lack robot context.
         body = {
             "transactionData": {
                 "Name": queue_name,
-                "RobotIdentifier": robot_identifier,
             }
         }
         resp = await http.post(url, headers=headers, json=body)

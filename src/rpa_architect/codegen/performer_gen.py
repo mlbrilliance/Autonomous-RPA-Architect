@@ -114,16 +114,20 @@ namespace {namespace}
         /// </summary>
         public async Task<LeasedQueueItem?> StartTransactionAsync(
             string queueName,
-            string robotIdentifier)
+            string robotIdentifier = "")
         {{
             await EnsureTokenAsync();
 
+            // OData $metadata: QueuesStartTransactionRequest has a
+            // "transactionData" field of type TransactionDataDto with
+            // property "Name". The "RobotIdentifier" is not in the
+            // metadata schema — it's auto-populated from the robot
+            // context when called from inside a UiPath job.
             var envelope = new
             {{
                 transactionData = new
                 {{
                     Name = queueName,
-                    RobotIdentifier = robotIdentifier,
                 }},
             }};
             var content = new StringContent(
@@ -271,17 +275,21 @@ def generate_performer_get_transaction_state_cs(
     namespace: str = DEFAULT_NAMESPACE,
 ) -> str:
     return f"""using System;
-using System.Text;
-using System.Text.Json;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace {namespace}
 {{
     /// <summary>
-    /// Leases the next queue item, decodes the embedded payload (or
-    /// re-fetches by id if the BW-10 bucket-ref fallback was used),
-    /// stores the Case on the context, and transitions to ProcessState.
-    /// Returns EndState when the queue is drained.
+    /// Fetches the next Queued case from SuiteCRM directly. We bypass
+    /// the Orchestrator queue's StartTransaction because that endpoint
+    /// requires robot-session context (external app tokens get 204 No
+    /// Content even when items are available — BW-19).
+    ///
+    /// Instead, the Performer queries SuiteCRM for cases with
+    /// status="Queued" (set by the Dispatcher) and processes them
+    /// one-by-one. This is less atomic than StartTransaction but works
+    /// reliably with external-app auth on Community Cloud.
     /// </summary>
     public class PerformerGetTransactionDataState : IState
     {{
@@ -289,47 +297,17 @@ namespace {namespace}
 
         public async Task<IState?> ExecuteAsync(ClaimsProcessContext ctx)
         {{
-            var rawItem = await ctx.PerformerQueue!.StartTransactionAsync(
-                AssetClient.QueueName,
-                AssetClient.RobotIdentifier);
-
-            if (rawItem == null)
+            // Fetch one Queued case from SuiteCRM.
+            var cases = await ctx.SuiteCrm!.ListQueuedCasesAsync(1);
+            if (cases.Count == 0)
             {{
-                Console.WriteLine("[performer] queue drained → End");
+                Console.WriteLine("[performer] no more Queued cases → End");
                 return new EndState();
             }}
 
-            // Cast to concrete type so the compiler can resolve TryGetValue.
-            var item = (LeasedQueueItem)rawItem;
-            ctx.CurrentTransactionId = item.Id;
-
-            Case claim;
-            if (item.SpecificContent.TryGetValue("payload_b64", out object? payloadObj))
-            {{
-                // Happy path: decode the base64 JSON embedded by the Dispatcher.
-                var b64 = payloadObj?.ToString() ?? "";
-                if (b64.StartsWith("\\""))
-                    b64 = b64.Trim('"');
-                var bytes = Convert.FromBase64String(b64);
-                var json = Encoding.UTF8.GetString(bytes);
-                claim = JsonSerializer.Deserialize<Case>(json)
-                    ?? throw new BusinessException("payload_b64 deserialised to null");
-            }}
-            else if (item.SpecificContent.TryGetValue("suitecrm_id", out object? idObj))
-            {{
-                // BW-10 fallback: payload was too big; re-fetch from SuiteCRM.
-                var suitecrmId = idObj?.ToString()?.Trim('"') ?? "";
-                if (string.IsNullOrEmpty(suitecrmId))
-                    throw new BusinessException("no suitecrm_id to re-fetch claim");
-                claim = await ctx.SuiteCrm!.GetCaseByIdAsync(suitecrmId);
-            }}
-            else
-            {{
-                throw new BusinessException(
-                    "queue item missing both payload_b64 and suitecrm_id");
-            }}
-
+            var claim = cases[0];
             ctx.CurrentCase = claim;
+            ctx.CurrentTransactionId = claim.SuiteCrmId ?? "";
 
             // Pre-fetch the policy so CoverageVerificationRule is a pure
             // in-memory check — no extra SuiteCRM round-trip in the hot path.
@@ -343,7 +321,7 @@ namespace {namespace}
                 ctx.CurrentPolicy = null;
             }}
 
-            Console.WriteLine($"[performer] leased {{claim.ClaimId}} (txn={{item.Id}})");
+            Console.WriteLine($"[performer] processing {{claim.ClaimId}} (id={{claim.SuiteCrmId}})");
             return new PerformerProcessState();
         }}
     }}
@@ -420,18 +398,24 @@ namespace {namespace}
 
         public async Task<IState?> ExecuteAsync(ClaimsProcessContext ctx)
         {{
-            var txnId = ctx.CurrentTransactionId;
-            if (!string.IsNullOrEmpty(txnId))
+            // BW-19: We update the case status directly in SuiteCRM
+            // instead of calling SetTransactionResult (which also needs
+            // robot session context). The Orchestrator queue items are
+            // tracking-only — the real state is in SuiteCRM.
+            var caseId = ctx.CurrentTransactionId;
+            if (!string.IsNullOrEmpty(caseId))
             {{
-                var output = new
+                var newStatus = ctx.CurrentCase?.Verdict == ClaimVerdict.AutoApprove ? "Closed_Closed"
+                    : ctx.CurrentCase?.Verdict == ClaimVerdict.Deny ? "Rejected"
+                    : "Pending_Input";
+                try
                 {{
-                    verdict = ctx.CurrentCase?.Verdict.ToString() ?? "Pending",
-                    claim_id = ctx.CurrentCase?.ClaimId ?? "",
-                }};
-                await ctx.PerformerQueue!.SetTransactionResultAsync(
-                    transactionId: txnId!,
-                    isSuccessful: true,
-                    output: output);
+                    await ctx.SuiteCrm!.UpdateCaseStatusAsync(caseId!, newStatus);
+                }}
+                catch (System.Exception ex)
+                {{
+                    Console.WriteLine($"[performer] status update failed: {{ex.Message}}");
+                }}
             }}
 
             // Clear per-item state for the next loop iteration.

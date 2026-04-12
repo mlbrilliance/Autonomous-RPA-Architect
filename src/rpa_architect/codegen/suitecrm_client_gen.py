@@ -232,6 +232,35 @@ namespace {namespace}
             return cases;
         }}
 
+        public async Task<List<Case>> ListQueuedCasesAsync(int limit = 1)
+        {{
+            // BW-19 workaround: Performer reads from SuiteCRM directly
+            // instead of using Orchestrator StartTransaction (which needs
+            // robot-session context). "Queued" is the status the
+            // Dispatcher sets after pushing the item to the queue.
+            var resp = await SendAsync(
+                HttpMethod.Get,
+                $"/Api/V8/module/Cases?filter%5Bstatus%5D%5Beq%5D=Queued&page%5Bsize%5D={{limit}}");
+            resp.EnsureSuccessStatusCode();
+
+            var json = await resp.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            var data = doc.RootElement.GetProperty("data");
+            var cases = new List<Case>();
+            foreach (var item in data.EnumerateArray())
+            {{
+                var attrs = item.GetProperty("attributes");
+                var c = new Case
+                {{
+                    ClaimId = attrs.GetProperty("name").GetString() ?? "",
+                    Status = attrs.GetProperty("status").GetString() ?? "Queued",
+                    SuiteCrmId = item.GetProperty("id").GetString(),
+                }}.WithDescriptionFields(attrs.GetProperty("description").GetString() ?? "");
+                cases.Add(c);
+            }}
+            return cases;
+        }}
+
         public async Task UpdateCaseStatusAsync(string caseId, string status)
         {{
             var payload = new
