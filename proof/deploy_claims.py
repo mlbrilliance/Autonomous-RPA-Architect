@@ -207,7 +207,7 @@ async def main(
         "__UIPATH_ORCHESTRATOR_URL__": orchestrator_base,
         "__UIPATH_CLIENT_ID__": env["UIPATH_CLIENT_ID"],
         "__UIPATH_CLIENT_SECRET__": env["UIPATH_CLIENT_SECRET"],
-        "__UIPATH_FOLDER_ID__": "0",  # placeholder; resolved live below
+        "__UIPATH_FOLDER_ID__": "7747906",  # Shared folder — resolved from Orchestrator API
     }
 
     print("[2/7] rewriting AssetClient.cs placeholders with real values")

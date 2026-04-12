@@ -211,7 +211,7 @@ namespace {namespace}
             // silently returns empty or 500.
             var resp = await SendAsync(
                 HttpMethod.Get,
-                $"/Api/V8/module/Cases?filter[status][eq]=Open_New&page[size]={{limit}}");
+                $"/Api/V8/module/Cases?filter%5Bstatus%5D%5Beq%5D=Open_New&page%5Bsize%5D={{limit}}");
             resp.EnsureSuccessStatusCode();
 
             var json = await resp.Content.ReadAsStringAsync();
@@ -293,7 +293,7 @@ namespace {namespace}
         {{
             var resp = await SendAsync(
                 HttpMethod.Get,
-                $"/Api/V8/module/Accounts?filter[name]={{Uri.EscapeDataString(policyNumber)}}");
+                $"/Api/V8/module/Accounts?filter%5Bname%5D={{Uri.EscapeDataString(policyNumber)}}");
             if (resp.StatusCode == HttpStatusCode.NotFound)
                 throw new BusinessException($"Policy {{policyNumber}} not found");
             resp.EnsureSuccessStatusCode();
@@ -323,7 +323,7 @@ namespace {namespace}
         {{
             var resp = await SendAsync(
                 HttpMethod.Get,
-                $"/Api/V8/module/Accounts?filter[name]={{Uri.EscapeDataString(npi)}}");
+                $"/Api/V8/module/Accounts?filter%5Bname%5D={{Uri.EscapeDataString(npi)}}");
             if (resp.StatusCode == HttpStatusCode.NotFound)
                 throw new BusinessException($"Provider {{npi}} not found");
             resp.EnsureSuccessStatusCode();
@@ -362,7 +362,7 @@ namespace {namespace}
             // name field, so we scan the description of matching cases.
             var resp = await SendAsync(
                 HttpMethod.Get,
-                $"/Api/V8/module/Cases?filter[description][like]=claimant_name%3D{{Uri.EscapeDataString(claimantName)}}&page[size]=50");
+                $"/Api/V8/module/Cases?filter%5Bdescription%5D%5Blike%5D=claimant_name%3D{{Uri.EscapeDataString(claimantName)}}&page%5Bsize%5D=50");
             if (!resp.IsSuccessStatusCode)
                 return new List<Case>();
 
@@ -397,7 +397,7 @@ namespace {namespace}
         {{
             var resp = await SendAsync(
                 HttpMethod.Get,
-                $"/Api/V8/module/Notes?filter[parent_type]=Cases&filter[parent_id]={{Uri.EscapeDataString(caseId)}}");
+                $"/Api/V8/module/Notes?filter%5Bparent_type%5D=Cases&filter%5Bparent_id%5D={{Uri.EscapeDataString(caseId)}}");
             if (!resp.IsSuccessStatusCode) return new List<string>();
 
             var json = await resp.Content.ReadAsStringAsync();
