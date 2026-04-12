@@ -119,6 +119,9 @@ def _parse_markdown_pdd(path: Path) -> ProcessIR:
     process_name = _extract_field(overview, "Name")
     process_type = _extract_field(overview, "Type") or "transactional"
     description = _extract_field(overview, "Description")
+    topology_raw = _extract_field(overview, "Topology") or "single"
+    if topology_raw not in ("single", "dispatcher_performer_reporter"):
+        topology_raw = "single"
 
     # --- Systems ---
     systems_text = _extract_section(content, "Systems")
@@ -242,6 +245,7 @@ def _parse_markdown_pdd(path: Path) -> ProcessIR:
         exception_categories=[],
         config=config,
         document_understanding=du_spec,
+        process_topology=topology_raw,  # type: ignore[arg-type]
     )
 
     # Validate round-trip

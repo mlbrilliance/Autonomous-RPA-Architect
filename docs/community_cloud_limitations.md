@@ -201,6 +201,91 @@ call `Path.Combine(projectDir, null)` and crash.
 
 ---
 
+# v0.6 additions — Dispatcher + Performer + Reporter factory
+
+Brick walls §13–§17 were discovered while building the claims
+adjudication factory (dispatcher + performer + reporter) against
+SuiteCRM 8.
+
+## 13. SuiteCRM 8 Documents REST endpoint is broken
+
+**Symptom:** Attempting to upload a PDF via `/Api/V8/module/Documents`
+with base64-encoded `file_contents` returns `500 Internal Server Error`
+or silently drops the attachment.
+
+**Evidence:** SuiteCRM GitHub Issue #10794 — open since 2020, reopened
+Apr 2026. Upstream has not shipped a fix in either the `hotfix-8.6` or
+`main` branches.
+
+**Workaround:** Use the Notes endpoint as a document substitute.
+Notes accept base64 `file_contents`, attach to Cases via
+`parent_type="Cases"` + `parent_id={caseId}`, and the
+`DocumentationCompletenessRule` counts them. The generated
+`SuiteCrmClient.GetCaseNotesAsync` method exposes this pattern.
+
+## 14. Single robot slot — tick collisions
+
+**Symptom:** Community Cloud grants one unattended robot slot on the
+free tier. When the Dispatcher's cron fires before the previous
+Performer finishes draining, UiPath returns `409 Conflict` with
+`errorCode: "robotBusy"`.
+
+**Workaround:** The SLA proof's `tick()` function polls
+`get_job_status(last_performer_job_id)` before invoking the next
+Dispatcher — if `state in ("Running", "Pending")`, it skips this tick
+and increments `state.ticks_skipped_busy`. Expected <5% skip rate
+over the 2-hour SLA window.
+
+## 15. SuiteCRM OAuth2 token eviction at ~50 min
+
+**Symptom:** Authed requests that were working 30 minutes ago start
+returning `401 Unauthorized` without any password or scope change.
+The token's nominal TTL (from `/Api/access_token`) is 3600s, so
+the caller's cached expiry doesn't trip — it's the server-side
+Laravel Passport cache that evicts tokens aggressively under load.
+
+**Evidence:** Live observation during SLA runs — the 401s cluster
+around the 45-55 minute mark regardless of request rate.
+
+**Workaround:** The generated `SuiteCrmClient.cs` wraps every request
+in a `try / catch-401 / refresh-token / retry-once` block (see
+`SendAsync` in `suitecrm_client_gen.py`). The client also caches the
+`_expiresAt` at `ttl - 60` to refresh proactively before the nominal
+eviction.
+
+## 16. Queue item `SpecificContent` 1 MiB limit
+
+**Symptom:** Pushing a full serialized Case (with inline base64
+document payloads) to the MedicalClaims queue fails with
+`413 Payload Too Large` once any one case exceeds ~1 MB.
+
+**Workaround:** Dispatcher's `DispatcherProcessState.cs` implements a
+fallback: if the base64-encoded payload exceeds 800 KiB (leaving
+headroom for the OData envelope), it writes a
+`payload_bucket_ref = "bucket://ClaimPayloads/{claim_id}.json"`
+instead. The Performer detects this and re-fetches the case via
+`SuiteCrm.GetCaseByIdAsync()` using the `suitecrm_id` also embedded in
+the queue item. The bucket itself is not actually written — the
+re-fetch path is the fallback mechanism.
+
+## 17. External cron drift on sleeping laptops
+
+**Symptom:** When the `proof/run_sla_claims.py --tick` shell loop runs
+on a laptop that enters sleep or standby, the cron interval gets
+compressed when the laptop wakes — multiple ticks can fire within
+seconds of each other, violating the single-robot-slot invariant (see
+§14) and generating a cluster of `skipped_busy` entries.
+
+**Workaround:** `proof/run_sla_claims.py` persists its tick state
+(including `last_performer_job_id` and `ticks_total`) to
+`demo-output/claims_sla/sla_state.json`. The script should be run
+under a proper scheduler (systemd timer, cron with `anacron`-style
+catch-up, or a VPS-hosted loop) rather than a laptop shell loop. The
+`skipped_busy` counter provides a post-hoc signal of how often drift
+collisions happened during a run.
+
+---
+
 ## Summary: what ships vs what's aspirational
 
 | Capability | Status |

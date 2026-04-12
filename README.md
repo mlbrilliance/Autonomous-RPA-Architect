@@ -9,7 +9,7 @@
 [![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-1C3C3C?style=for-the-badge&logo=langgraph&logoColor=white)](https://langchain-ai.github.io/langgraph/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 [![Playwright](https://img.shields.io/badge/Playwright-Harvesting-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)](https://playwright.dev/)
-[![Tests](https://img.shields.io/badge/Tests-984%20Passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-1119%20Passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 [![UiPath Studio](https://img.shields.io/badge/UiPath-Studio%2025.10-FA4616?style=for-the-badge&logo=uipath&logoColor=white)](https://docs.uipath.com)
 [![Generators](https://img.shields.io/badge/Generators-96-blue?style=for-the-badge)](src/rpa_architect/generators/)
 [![Lint Rules](https://img.shields.io/badge/Lint%20Rules-25-orange?style=for-the-badge)](src/rpa_architect/xaml_lint/)
@@ -27,6 +27,66 @@ _Author → Deploy → Monitor → Diagnose → Fix — the full lifecycle, in a
 [Quick Start](#-quick-start) · [Lifecycle Agent](#-autonomous-lifecycle-agent) · [Browser Harvesting](#-live-browser-selector-harvesting) · [Maestro Workflows](#-uipath-maestro-workflow-generation) · [Domain Packs](#-vertical-domain-packs) · [Architecture](#-architecture) · [Configuration](#%EF%B8%8F-configuration)
 
 </div>
+
+---
+
+## What's New in v0.6.0 — Claims Adjudication Factory (Dispatcher + Performer + Reporter)
+
+The v0.5 Invoice Factory was a single-process REFramework state machine. v0.6 is the next tier: **three separately-packaged UiPath processes** coordinating through an Orchestrator queue, targeting medical insurance claims adjudication in SuiteCRM 8. Built to stress the Community Cloud free tier — 1 unattended robot slot, no schedule trigger API, .NET 8 Portable runtime — with a 2-hour SLA target of 50 claims/hour.
+
+<table>
+<tr>
+<td width="50%">
+
+**Dispatcher + Performer + Reporter pattern** — Three `.nupkg`s (each a standalone Portable project) coordinating via a shared Orchestrator queue (`MedicalClaims`). Dispatcher pulls new-status Cases from SuiteCRM and pushes queue items. Performer leases one item at a time via `StartTransaction` / `SetTransactionResult`, runs the 5-rule adjudication engine, writes verdict back. Reporter aggregates queue history, renders an HTML SLA report. Each process has byte-identical copies of the shared C# sources — enforced by a test — because UiPath Community Cloud's NuGet feed silently strips cross-package references at pack time.
+
+</td>
+<td width="50%">
+
+**5-rule medical claims adjudication engine** — `CoverageVerificationRule` (in-memory against pre-fetched Policy), `AmountThresholdRule` (>$10k flag, >$100k deny), `DocumentationCompletenessRule` (counts Notes, denies insufficient docs for E&M procedures), `NetworkProviderRule` (live SuiteCRM lookup, flags out-of-network), `FraudVelocityRule` (≥4 claims same claimant 30d → deny, 2-3 → flag). Rules ordered cheap→expensive so deterministic denies short-circuit before SuiteCRM round-trips. FlagForReview reasons accumulate across rules.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**SuiteCRM 8 OAuth2 REST adapter** — `SuiteCrmClient.cs` generator emits a complete client with OAuth2 password grant, token caching, **401 refresh-retry (BW-15 mitigation)** for Laravel Passport's aggressive token eviction at ~50 min idle, and seven API methods including the **Notes-as-documents substitute (BW-13)** — SuiteCRM 8's Documents REST endpoint is broken upstream (GitHub Issue #10794, open since 2020, reopened April 2026). The client routes around it by storing claim documents as Notes with `parent_type="Cases"`.
+
+</td>
+<td width="50%">
+
+**Verdict-distribution drift detection** — `MetricsStore` schema migrated non-destructively to add `verdicts_by_category` column. `detect_drift()` gains a fourth drift type (`verdict_distribution_shift`) firing when any categorical outcome (auto_approve / flag_for_review / deny) shifts >10% relative to the rolling baseline. Requires baseline count ≥ 5 to avoid first-run false positives. Wired into `lifecycle.diagnosis` so a rule-verdict cluster short-circuits to `business_rule_violation` category with confidence 0.9.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**5 new Community Cloud brick walls documented** — `docs/community_cloud_limitations.md` §13–§17 cover SuiteCRM Documents brokenness, single-robot-slot tick collisions (BW-14), token eviction at 50 min (BW-15), 1 MiB queue-item payload limit with bucket-ref fallback (BW-16), and external cron drift on sleeping laptops (BW-17). Every wall has live stack traces + error codes + the concrete workaround wired into code.
+
+</td>
+<td width="50%">
+
+**2-hour SLA stress proof** — `proof/run_sla_claims.py` orchestrates: (1) seed 100 Cases to SuiteCRM via the seed client (95 clean + 5 deterministic faults, one per rule), (2) external cron ticks every 2 min invoking Dispatcher then Performer with BW-14 collision-skip logic, (3) Reporter aggregation + HTML render, (4) drift + diagnosis verification, (5) final self-contained HTML SLA report. Target: 50 claims/hour × 2 hours with ≥95% success rate and p50 latency ≤72s. Fault injection deliberately triggers every rule so drift detector validates live.
+
+</td>
+</tr>
+</table>
+
+### What's actually running live on Community Cloud
+
+| Capability | v0.5 (Invoice) | v0.6 (Claims) |
+|---|---|---|
+| Queue-coordinated multi-process pipeline (Dispatcher + Performer + Reporter) | — | ✅ live |
+| OAuth2 REST against a second ERP (SuiteCRM 8) with 401-refresh-retry | — | ✅ live |
+| 5-rule medical claims engine with cheap→expensive short-circuit + FlagForReview accumulation | — | ✅ live |
+| `StartTransaction` / `SetTransactionResult` queue-consumer performer pattern | — | ✅ live |
+| Verdict-distribution drift detection (categorical outcome shift) | — | ✅ live |
+| Byte-identical shared C# sources across 3 projects (enforced by test) | — | ✅ live |
+| Real `dotnet build` compile verification per process (test gate) | ✅ | ✅ |
+| Every C# generator round-trips to compiled .NET 8 DLL | ✅ | ✅ |
+
+Full architecture: `docs/community_cloud_limitations.md` (§13–§17 for v0.6 walls), `tests/fixtures/pdds/medical_claims.md` (PDD source), `src/rpa_architect/assembler/claims_factory_assembler.py` (multi-process assembler), `proof/deploy_claims.py` (three-package live deploy), `proof/run_sla_claims.py` (SLA stress orchestrator).
 
 ---
 
