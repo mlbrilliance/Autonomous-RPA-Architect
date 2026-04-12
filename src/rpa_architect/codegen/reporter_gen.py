@@ -244,16 +244,24 @@ namespace {namespace}
 """
 
 
-def generate_reporter_main_cs(namespace: str = DEFAULT_NAMESPACE) -> str:
+def generate_reporter_main_cs(
+    namespace: str = DEFAULT_NAMESPACE,
+    project_namespace: str = "ClaimsReporter",
+) -> str:
+    """Emit the Reporter's [Workflow] entry point.
+
+    BW-18 fix: class lives in ``project_namespace``, ``[Workflow]`` on method.
+    """
     return f"""using System;
 using System.Threading.Tasks;
 using UiPath.CodedWorkflows;
+using {namespace};
 
-namespace {namespace}
+namespace {project_namespace}
 {{
-    [Workflow]
     public class ReporterMain : CodedWorkflow
     {{
+        [Workflow]
         public async Task<int> Execute()
         {{
             var ctx = new ClaimsProcessContext

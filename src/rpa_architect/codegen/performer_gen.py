@@ -448,22 +448,30 @@ namespace {namespace}
 """
 
 
-def generate_performer_main_cs(namespace: str = DEFAULT_NAMESPACE) -> str:
+def generate_performer_main_cs(
+    namespace: str = DEFAULT_NAMESPACE,
+    project_namespace: str = "ClaimsPerformer",
+) -> str:
+    """Emit the Performer's [Workflow] entry point.
+
+    BW-18 fix: class lives in ``project_namespace`` (matching project.json
+    name). ``[Workflow]`` attribute on Execute() method, not the class.
+    """
     return f"""using System;
 using System.Threading.Tasks;
 using UiPath.CodedWorkflows;
+using {namespace};
 
-namespace {namespace}
+namespace {project_namespace}
 {{
     /// <summary>
-    /// Performer entry point — the [Workflow]-annotated class UiPath
-    /// invokes from Main.xaml. Wires up SuiteCRM + Orchestrator clients
+    /// Performer entry point. Wires up SuiteCRM + Orchestrator clients
     /// from baked-in AssetClient constants, then drains the queue until
     /// it's empty.
     /// </summary>
-    [Workflow]
     public class PerformerMain : CodedWorkflow
     {{
+        [Workflow]
         public async Task<int> Execute()
         {{
             var ctx = new ClaimsProcessContext

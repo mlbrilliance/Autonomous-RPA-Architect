@@ -490,23 +490,34 @@ namespace {namespace}
 """
 
 
-def generate_dispatcher_main_cs(namespace: str = DEFAULT_NAMESPACE) -> str:
+def generate_dispatcher_main_cs(
+    namespace: str = DEFAULT_NAMESPACE,
+    project_namespace: str = "ClaimsDispatcher",
+) -> str:
+    """Emit the Dispatcher's [Workflow] entry point.
+
+    BW-18 fix: the class must live in ``project_namespace`` (matching the
+    project.json ``name`` field) so uipcli's auto-generated CodedWorkflow
+    base class resolves correctly. The ``[Workflow]`` attribute goes on
+    the ``Execute()`` method, not the class — matching v0.5's pattern
+    that was validated live on Community Cloud.
+    """
     return f"""using System;
 using System.Threading.Tasks;
 using UiPath.CodedWorkflows;
+using {namespace};
 
-namespace {namespace}
+namespace {project_namespace}
 {{
     /// <summary>
-    /// Dispatcher entry point — the [Workflow]-annotated class that
-    /// UiPath invokes from Main.xaml. Instantiates SuiteCrmClient and
+    /// Dispatcher entry point. Instantiates SuiteCrmClient and
     /// UiPathQueueClient from baked-in AssetClient constants, then runs
     /// the state machine loop to drain all new-status Cases into the
     /// MedicalClaims queue.
     /// </summary>
-    [Workflow]
     public class DispatcherMain : CodedWorkflow
     {{
+        [Workflow]
         public async Task<int> Execute()
         {{
             var ctx = new ClaimsProcessContext

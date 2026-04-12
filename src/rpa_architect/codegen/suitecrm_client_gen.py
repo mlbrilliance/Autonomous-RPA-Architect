@@ -205,9 +205,13 @@ namespace {namespace}
 
         public async Task<List<Case>> ListNewCasesAsync(int limit = 50)
         {{
+            // SuiteCRM maps status "New" to internal key "Open_New".
+            // The filter syntax MUST include the [eq] operator —
+            // filter[status][eq]=Open_New works; filter[status]=Open_New
+            // silently returns empty or 500.
             var resp = await SendAsync(
                 HttpMethod.Get,
-                $"/Api/V8/module/Cases?filter[status]=New&page[size]={{limit}}");
+                $"/Api/V8/module/Cases?filter[status][eq]=Open_New&page[size]={{limit}}");
             resp.EnsureSuccessStatusCode();
 
             var json = await resp.Content.ReadAsStringAsync();

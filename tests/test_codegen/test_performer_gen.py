@@ -36,11 +36,15 @@ _CSPROJ = """<Project Sdk="Microsoft.NET.Sdk">
 """
 
 
-_STUB_CODEDWORKFLOWS = """namespace UiPath.CodedWorkflows
+_STUB_CODEDWORKFLOWS = """
+namespace UiPath.CodedWorkflows
 {
-    public class CodedWorkflow {}
+    [System.AttributeUsage(System.AttributeTargets.Method)]
     public class WorkflowAttribute : System.Attribute {}
 }
+namespace ClaimsDispatcher { public class CodedWorkflow {} }
+namespace ClaimsPerformer { public class CodedWorkflow {} }
+namespace ClaimsReporter { public class CodedWorkflow {} }
 """
 
 
