@@ -243,9 +243,11 @@ namespace {namespace}
                 JsonSerializer.Serialize(payload),
                 Encoding.UTF8,
                 "application/vnd.api+json");
+            // SuiteCRM 8 JSON:API: PATCH goes to /Api/V8/module (no type
+            // suffix in the URL). The type + id live in the payload body.
             var resp = await SendAsync(
                 new HttpMethod("PATCH"),
-                $"/Api/V8/module/Cases/{{caseId}}",
+                "/Api/V8/module",
                 content);
             resp.EnsureSuccessStatusCode();
         }}
@@ -274,7 +276,7 @@ namespace {namespace}
 
             var resp = await SendAsync(
                 new HttpMethod("PATCH"),
-                $"/Api/V8/module/Cases/{{caseId}}",
+                "/Api/V8/module",
                 content);
             resp.EnsureSuccessStatusCode();
         }}
@@ -430,7 +432,8 @@ namespace {namespace}
                 Encoding.UTF8,
                 "application/vnd.api+json");
 
-            var resp = await SendAsync(HttpMethod.Post, "/Api/V8/module/Notes", content);
+            // POST goes to /Api/V8/module (no type suffix).
+            var resp = await SendAsync(HttpMethod.Post, "/Api/V8/module", content);
             resp.EnsureSuccessStatusCode();
         }}
 

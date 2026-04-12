@@ -35,7 +35,11 @@ services:
       retries: 10
 
   suitecrm:
-    image: bitnami/suitecrm:8
+    # Bitnami deprecated the `bitnami/suitecrm:8` tag in 2025; the
+    # frozen-in-time image lives at `bitnamilegacy/suitecrm` now. We pin
+    # 8.8.1 specifically so the OAuth2 Passport client registration
+    # endpoint is available.
+    image: bitnamilegacy/suitecrm:8.8.1
     container_name: suitecrm-web
     depends_on:
       suitecrm-db:

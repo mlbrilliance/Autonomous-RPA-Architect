@@ -289,20 +289,22 @@ namespace {namespace}
 
         public async Task<IState?> ExecuteAsync(ClaimsProcessContext ctx)
         {{
-            var item = await ctx.PerformerQueue!.StartTransactionAsync(
+            var rawItem = await ctx.PerformerQueue!.StartTransactionAsync(
                 AssetClient.QueueName,
                 AssetClient.RobotIdentifier);
 
-            if (item == null)
+            if (rawItem == null)
             {{
                 Console.WriteLine("[performer] queue drained → End");
                 return new EndState();
             }}
 
+            // Cast to concrete type so the compiler can resolve TryGetValue.
+            var item = (LeasedQueueItem)rawItem;
             ctx.CurrentTransactionId = item.Id;
 
             Case claim;
-            if (item.SpecificContent.TryGetValue("payload_b64", out var payloadObj))
+            if (item.SpecificContent.TryGetValue("payload_b64", out object? payloadObj))
             {{
                 // Happy path: decode the base64 JSON embedded by the Dispatcher.
                 var b64 = payloadObj?.ToString() ?? "";
@@ -313,7 +315,7 @@ namespace {namespace}
                 claim = JsonSerializer.Deserialize<Case>(json)
                     ?? throw new BusinessException("payload_b64 deserialised to null");
             }}
-            else if (item.SpecificContent.TryGetValue("suitecrm_id", out var idObj))
+            else if (item.SpecificContent.TryGetValue("suitecrm_id", out object? idObj))
             {{
                 // BW-10 fallback: payload was too big; re-fetch from SuiteCRM.
                 var suitecrmId = idObj?.ToString()?.Trim('"') ?? "";

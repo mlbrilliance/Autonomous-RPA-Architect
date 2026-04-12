@@ -195,25 +195,22 @@ def generate_claims_process_context_cs(namespace: str = DEFAULT_NAMESPACE) -> st
 
 namespace {namespace}
 {{
-    // Forward declarations — the real implementations live in
-    // UiPathQueueClient.cs (Dispatcher) and PerformerQueueClient.cs
-    // (Performer). We declare empty marker classes here so the context
-    // compiles standalone; the real definitions override these via
-    // C#'s single-class rule (last-defined wins within a namespace).
-    public partial class UiPathQueueClient {{ }}
-    public partial class PerformerQueueClient {{ }}
-
     /// <summary>
     /// Mutable state passed between <c>IState.ExecuteAsync</c> calls in the
     /// Performer state machine. Replaces v0.5's <c>ProcessContext</c> which
     /// is hard-wired to OdooClient + invoice fields.
+    ///
+    /// The <c>UiPathQueue</c> and <c>PerformerQueue</c> fields are typed as
+    /// <c>dynamic</c> so this file compiles standalone without needing the
+    /// real UiPathQueueClient / PerformerQueueClient — each process brings
+    /// the concrete class in its own project.
     /// </summary>
     public class ClaimsProcessContext
     {{
         public SuiteCrmClient SuiteCrm {{ get; set; }} = null!;
         public ClaimsRuleEngine Rules {{ get; set; }} = null!;
-        public UiPathQueueClient? UiPathQueue {{ get; set; }}
-        public PerformerQueueClient? PerformerQueue {{ get; set; }}
+        public dynamic? UiPathQueue {{ get; set; }}
+        public dynamic? PerformerQueue {{ get; set; }}
         public ClaimMetrics Metrics {{ get; set; }} = new();
 
         /// <summary>The case currently being processed — refreshed each transition.</summary>

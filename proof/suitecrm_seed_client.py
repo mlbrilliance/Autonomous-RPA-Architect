@@ -107,6 +107,14 @@ def build_note_payload(
 
     Notes are used as the document substitute because Documents REST upload
     is broken in SuiteCRM 8 (GitHub Issue #10794, reopened Apr 2026).
+
+    BW-13b: SuiteCRM 8's JSON:API **also** rejects inline file uploads via
+    the Notes endpoint — sending ``filename`` + ``file_mime_type`` +
+    ``file_contents`` in one POST returns 400 Bad Request. The workaround
+    is to record only the ``name`` + ``description`` metadata; the rules
+    engine counts attached Notes rather than reading the file contents,
+    so the presence of the Note is what matters for
+    ``DocumentationCompletenessRule``.
     """
     return {
         "data": {
@@ -115,9 +123,7 @@ def build_note_payload(
                 "name": filename,
                 "parent_type": "Cases",
                 "parent_id": case_id,
-                "filename": filename,
-                "file_mime_type": "application/pdf",
-                "file_contents": content_b64,
+                "description": f"Synthetic doc ref: {filename}",
             },
         }
     }
@@ -150,7 +156,10 @@ async def seed_all(fixture_path: Path) -> dict[str, int]:
 
     data = json.loads(fixture_path.read_text(encoding="utf-8"))
 
-    async with httpx.AsyncClient() as http:
+    # SuiteCRM 8 is slow — each POST takes ~1s. With 100 cases × 3+
+    # related writes that's ~300+ s of sync calls. Default 5s timeout
+    # isn't enough.
+    async with httpx.AsyncClient(timeout=120.0) as http:
         token = await _get_token(
             http,
             base_url,
@@ -171,8 +180,11 @@ async def seed_all(fixture_path: Path) -> dict[str, int]:
         # so we store them as Accounts with a `type` discriminator.
         policies_created = 0
         for policy in data["policies"]:
+            # SuiteCRM 8 JSON:API POST goes to /Api/V8/module (no type
+            # suffix) — the type lives in the payload body. A POST to
+            # /Api/V8/module/Accounts returns 405 Method Not Allowed.
             resp = await http.post(
-                f"{base_url}/Api/V8/module/Accounts",
+                f"{base_url}/Api/V8/module",
                 json={
                     "data": {
                         "type": "Accounts",
@@ -197,7 +209,7 @@ async def seed_all(fixture_path: Path) -> dict[str, int]:
         providers_created = 0
         for provider in data["providers"]:
             resp = await http.post(
-                f"{base_url}/Api/V8/module/Accounts",
+                f"{base_url}/Api/V8/module",
                 json={
                     "data": {
                         "type": "Accounts",
@@ -221,7 +233,7 @@ async def seed_all(fixture_path: Path) -> dict[str, int]:
         notes_created = 0
         for case in data["cases"]:
             resp = await http.post(
-                f"{base_url}/Api/V8/module/Cases",
+                f"{base_url}/Api/V8/module",
                 json=build_case_payload(case),
                 headers=auth_headers,
             )
@@ -231,7 +243,7 @@ async def seed_all(fixture_path: Path) -> dict[str, int]:
 
             for note in case.get("notes", []):
                 note_resp = await http.post(
-                    f"{base_url}/Api/V8/module/Notes",
+                    f"{base_url}/Api/V8/module",
                     json=build_note_payload(
                         case_id=case_id,
                         filename=note["filename"],

@@ -172,6 +172,7 @@ def _build_project_json(project_name: str, main_entry: str) -> str:
     docs/community_cloud_limitations.md lines up here.
     """
     import json
+    import uuid
 
     payload = {
         "name": project_name,
@@ -216,7 +217,13 @@ def _build_project_json(project_name: str, main_entry: str) -> str:
         "entryPoints": [
             {
                 "filePath": "Main.xaml",
-                "uniqueId": f"{project_name.lower()}-entry",
+                # uipcli deserialises this as System.Guid — strings like
+                # "my-entry" fail with JsonSerializationException. Use a
+                # deterministic GUID derived from the project name so the
+                # value stays stable across repacks.
+                "uniqueId": str(
+                    uuid.uuid5(uuid.NAMESPACE_URL, f"rpa-architect://{project_name}")
+                ),
                 "input": [],
                 "output": [],
             }
@@ -255,10 +262,16 @@ def assemble_claims_factory(
 
     project_dirs: dict[str, Path] = {}
 
+    # Project names must NOT collide with any class name in the generated
+    # C# because uipcli creates a child namespace from the project name
+    # (e.g. MedicalClaimsProcessing.ClaimsDispatcher). If a class with the
+    # same name as the project exists in the parent namespace, CS0101
+    # fires. We use "Claims" prefix to distinguish from the class names
+    # (DispatcherMain, PerformerMain, ReporterMain).
     specs = {
-        "dispatcher": ("DispatcherMain", _dispatcher_specific_files),
-        "performer": ("PerformerMain", _performer_specific_files),
-        "reporter": ("ReporterMain", _reporter_specific_files),
+        "dispatcher": ("ClaimsDispatcher", _dispatcher_specific_files),
+        "performer": ("ClaimsPerformer", _performer_specific_files),
+        "reporter": ("ClaimsReporter", _reporter_specific_files),
     }
 
     shared = _shared_claims_files(namespace)
@@ -279,7 +292,7 @@ def assemble_claims_factory(
         (project_dir / "Main.xaml").write_text(_MINIMAL_MAIN_XAML, encoding="utf-8")
         (project_dir / "project.json").write_text(
             _build_project_json(
-                f"{namespace}.{main_class}",
+                main_class,  # project name (no dots — uipcli creates a child namespace from it)
                 main_class,
             ),
             encoding="utf-8",

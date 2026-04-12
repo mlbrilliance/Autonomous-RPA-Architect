@@ -179,15 +179,29 @@ async def main(
 
         print("[7/7] creating three releases")
         release_keys: list[str] = []
-        for name in ("dispatcher", "performer", "reporter"):
-            package_id = f"{NAMESPACE}.{name.capitalize()}Main"
+        # Package names must match the `name` field in project.json, which
+        # the assembler sets to "ClaimsDispatcher" / "ClaimsPerformer" /
+        # "ClaimsReporter" (see claims_factory_assembler.py).
+        project_names = {
+            "dispatcher": "ClaimsDispatcher",
+            "performer": "ClaimsPerformer",
+            "reporter": "ClaimsReporter",
+        }
+        for name, pkg_name in project_names.items():
             try:
-                release_key = await client.create_release(
-                    package_id=package_id,
-                    process_name=f"MedicalClaims.{name.capitalize()}",
-                    environment_id=None,
-                    process_version="1.0.0",
+                # ProcessKey must match the uploaded package's Id field
+                # (= project.json name), NOT a custom display name.
+                release_data = await client._request(
+                    "POST",
+                    "Releases",
+                    json={
+                        "Name": f"MedicalClaims.{name.capitalize()}",
+                        "ProcessKey": pkg_name,
+                        "ProcessVersion": "1.0.0",
+                        "Description": "Claims factory v0.6",
+                    },
                 )
+                release_key = str(release_data.get("Key", ""))
                 release_keys.append(release_key)
                 print(f"      release created: {name} → {release_key}")
             except Exception as exc:
