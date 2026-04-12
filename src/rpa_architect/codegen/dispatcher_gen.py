@@ -242,6 +242,7 @@ def generate_asset_client_cs(namespace: str = DEFAULT_NAMESPACE) -> str:
         public const string UiPathClientSecret = "__UIPATH_CLIENT_SECRET__";
         public const string UiPathFolderId = "__UIPATH_FOLDER_ID__";
         public const string QueueName = "MedicalClaims";
+        public const string RobotIdentifier = "serverless-robot";
 
         public static string GetSuiteCrmBaseUrl() => SuiteCrmBaseUrl;
         public static string GetSuiteCrmClientId() => SuiteCrmClientId;
