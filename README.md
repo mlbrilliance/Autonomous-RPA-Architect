@@ -38,7 +38,7 @@ The v0.5 Invoice Factory was a single-process REFramework state machine. v0.6 is
 <tr>
 <td width="50%">
 
-**Dispatcher + Performer + Reporter pattern** — Three `.nupkg`s (each a standalone Portable project) coordinating via a shared Orchestrator queue (`MedicalClaims`). Dispatcher pulls new-status Cases from SuiteCRM and pushes queue items. Performer leases one item at a time via `StartTransaction` / `SetTransactionResult`, runs the 5-rule adjudication engine, writes verdict back. Reporter aggregates queue history, renders an HTML SLA report. Each process has byte-identical copies of the shared C# sources — enforced by a test — because UiPath Community Cloud's NuGet feed silently strips cross-package references at pack time.
+**Dispatcher + Performer + Reporter pattern** — Three `.nupkg`s (each a standalone Portable project) coordinating via a shared Orchestrator queue (`MedicalClaims`). Dispatcher pulls new-status Cases from SuiteCRM and pushes queue items. Performer reads Queued cases directly from SuiteCRM (BW-19: `StartTransaction` requires robot-session context, external-app tokens get 204), runs the 5-rule adjudication engine, writes verdicts + audit notes back. Reporter aggregates queue history, renders an HTML SLA report. Each process has byte-identical copies of the shared C# sources — enforced by a test — because UiPath Community Cloud's NuGet feed silently strips cross-package references at pack time. **Live-validated: 100 claims adjudicated on Community Cloud in 5 minutes.**
 
 </td>
 <td width="50%">
@@ -62,7 +62,7 @@ The v0.5 Invoice Factory was a single-process REFramework state machine. v0.6 is
 <tr>
 <td width="50%">
 
-**5 new Community Cloud brick walls documented** — `docs/community_cloud_limitations.md` §13–§17 cover SuiteCRM Documents brokenness, single-robot-slot tick collisions (BW-14), token eviction at 50 min (BW-15), 1 MiB queue-item payload limit with bucket-ref fallback (BW-16), and external cron drift on sleeping laptops (BW-17). Every wall has live stack traces + error codes + the concrete workaround wired into code.
+**9 new brick walls documented** — BW-13 through BW-26, discovered during live deployment to Community Cloud + SuiteCRM 8. Highlights: SuiteCRM Documents REST broken (BW-13, use Notes), StartTransaction needs robot session context (BW-19, Performer reads SuiteCRM directly), all SuiteCRM filters require `[eq]` operator (BW-20), uipcli namespace mismatch for CodedWorkflow (BW-18, Main class in project namespace + `[Workflow]` on method), project.json `main` must point to `.cs` file not `Main.xaml` (BW-22). Every wall documented with live error messages + workaround in `docs/brick_walls/`.
 
 </td>
 <td width="50%">
@@ -77,16 +77,17 @@ The v0.5 Invoice Factory was a single-process REFramework state machine. v0.6 is
 
 | Capability | v0.5 (Invoice) | v0.6 (Claims) |
 |---|---|---|
-| Queue-coordinated multi-process pipeline (Dispatcher + Performer + Reporter) | — | ✅ live |
+| Queue-coordinated multi-process pipeline (Dispatcher + Performer + Reporter) | — | ✅ live (100 claims) |
 | OAuth2 REST against a second ERP (SuiteCRM 8) with 401-refresh-retry | — | ✅ live |
 | 5-rule medical claims engine with cheap→expensive short-circuit + FlagForReview accumulation | — | ✅ live |
-| `StartTransaction` / `SetTransactionResult` queue-consumer performer pattern | — | ✅ live |
-| Verdict-distribution drift detection (categorical outcome shift) | — | ✅ live |
+| Performer reads Queued cases from SuiteCRM directly (BW-19 pivot from StartTransaction) | — | ✅ live |
+| Verdict-distribution drift detection (categorical outcome shift) | — | ✅ offline-tested |
 | Byte-identical shared C# sources across 3 projects (enforced by test) | — | ✅ live |
+| uipcli 25.10.12 compiles all 3 projects to DLL with real UiPath SDK | — | ✅ live |
 | Real `dotnet build` compile verification per process (test gate) | ✅ | ✅ |
 | Every C# generator round-trips to compiled .NET 8 DLL | ✅ | ✅ |
 
-Full architecture: `docs/community_cloud_limitations.md` (§13–§17 for v0.6 walls), `tests/fixtures/pdds/medical_claims.md` (PDD source), `src/rpa_architect/assembler/claims_factory_assembler.py` (multi-process assembler), `proof/deploy_claims.py` (three-package live deploy), `proof/run_sla_claims.py` (SLA stress orchestrator).
+Full architecture: `docs/claims_factory_live_evidence.md` (live run evidence + timeline), `docs/brick_walls/19_start_transaction_robot_context.md` (BW-19 root cause), `docs/community_cloud_limitations.md` (§13–§17 for v0.6 walls), `tests/fixtures/pdds/medical_claims.md` (PDD source), `src/rpa_architect/assembler/claims_factory_assembler.py` (multi-process assembler), `proof/deploy_claims.py` (three-package live deploy), `proof/run_sla_claims.py` (SLA stress orchestrator).
 
 ---
 
