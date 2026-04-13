@@ -393,3 +393,12 @@ class ProcessIR(BaseModel):
         default=None,
         description="Document Understanding (IXP) configuration. None disables DU.",
     )
+    process_topology: Literal["single", "dispatcher_performer_reporter"] = Field(
+        default="single",
+        description=(
+            "Process topology. 'single' emits one project dir (v0.5 flow). "
+            "'dispatcher_performer_reporter' emits three sibling dirs "
+            "(Dispatcher/Performer/Reporter) coordinated via an "
+            "Orchestrator queue — the v0.6 medical claims pattern."
+        ),
+    )

@@ -79,6 +79,14 @@ class MonitoringReport(BaseModel):
     avg_duration_seconds: float = Field(default=0.0, ge=0.0, description="Average job duration.")
     failed_jobs: list[ExecutionLog] = Field(default_factory=list, description="Failed job details.")
     errors_by_type: dict[str, int] = Field(default_factory=dict, description="Error type distribution.")
+    verdicts_by_category: dict[str, int] = Field(
+        default_factory=dict,
+        description=(
+            "Verdict counts by category (auto_approve / flag_for_review / "
+            "deny) for categorical drift detection. Populated by the "
+            "claims Performer via RobotLogs parsing."
+        ),
+    )
 
 
 class DiagnosisResult(BaseModel):
@@ -143,6 +151,7 @@ class DriftReport(BaseModel):
         "duration_increase",
         "new_error_type",
         "throughput_decline",
+        "verdict_distribution_shift",
     ] = Field(description="Type of drift detected.")
     severity: Literal["low", "medium", "high"] = Field(description="Drift severity.")
     baseline_value: float = Field(description="Historical baseline metric.")

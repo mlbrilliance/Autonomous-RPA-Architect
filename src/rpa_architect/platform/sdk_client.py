@@ -278,6 +278,137 @@ class UiPathClient:
             status="New",
         )
 
+    async def start_transaction(
+        self,
+        queue_name: str,
+        robot_identifier: str,
+    ) -> QueueItem | None:
+        """Lease the next queue item via the StartTransaction OData action.
+
+        Returns a ``QueueItem`` with ``status="InProgress"`` when an item
+        was leased, or ``None`` when the queue is empty (HTTP 204).
+
+        This is the core of the Performer pattern — the robot calls this
+        in a loop until it returns None, processes each item, then calls
+        :meth:`set_transaction_result` to mark the outcome.
+        """
+        http = await self._get_http()
+        headers = await self._headers()
+        url = (
+            f"{self._base_url_sync()}/"
+            "Queues/UiPathODataSvc.StartTransaction"
+        )
+        # OData $metadata: QueuesStartTransactionRequest.transactionData
+        # has property "Name" (queue name). RobotIdentifier is NOT in the
+        # schema — it's auto-populated from the robot context when called
+        # from inside a UiPath job. External API clients get 204 (no items)
+        # because they lack robot context.
+        body = {
+            "transactionData": {
+                "Name": queue_name,
+            }
+        }
+        resp = await http.post(url, headers=headers, json=body)
+        if resp.status_code == 204 or not resp.content:
+            # Queue is drained — Orchestrator returns 204 No Content.
+            return None
+        if resp.status_code >= 400:
+            raise httpx.HTTPStatusError(
+                f"StartTransaction -> {resp.status_code}: {resp.text[:800]}",
+                request=resp.request,
+                response=resp,
+            )
+        data = resp.json()
+        return QueueItem(
+            item_id=str(data.get("Id", "")),
+            reference=str(data.get("Reference", "")),
+            specific_content=data.get("SpecificContent", {}) or {},
+            status=str(data.get("Status", "InProgress")),
+        )
+
+    async def set_transaction_result(
+        self,
+        transaction_id: str,
+        is_successful: bool,
+        output: dict[str, Any] | None = None,
+        business_error: str | None = None,
+    ) -> None:
+        """Finalise a leased queue item with Success or BusinessException.
+
+        ``business_error`` is used when a rule deterministically rejected
+        the work (the Orchestrator records a "BusinessException" vs. an
+        "Error" — distinct categories in drift + diagnosis).
+        """
+        result: dict[str, Any] = {
+            "IsSuccessful": bool(is_successful),
+            "Output": output or {},
+        }
+        if not is_successful and business_error:
+            result["ProcessingException"] = {
+                "Reason": business_error,
+                "Type": "BusinessException",
+                "Details": business_error,
+            }
+        body = {"transactionResult": result}
+        await self._request(
+            "POST",
+            f"QueueItems({transaction_id})/UiPathODataSvc.SetTransactionResult",
+            json=body,
+        )
+
+    async def get_queue_item(self, item_id: str) -> QueueItem:
+        """Fetch a queue item by its numeric id."""
+        data = await self._request("GET", f"QueueItems({item_id})")
+        return QueueItem(
+            item_id=str(data.get("Id", item_id)),
+            reference=str(data.get("Reference", "")),
+            specific_content=data.get("SpecificContent", {}) or {},
+            status=str(data.get("Status", "")),
+        )
+
+    async def list_queue_items(
+        self,
+        queue_name: str,
+        status: str | None = None,
+        top: int = 100,
+    ) -> list[QueueItem]:
+        """List queue items, optionally filtered by Status.
+
+        Used by the Reporter to compute SLA aggregates and the verdict
+        distribution for drift detection.
+        """
+        filter_parts = [f"QueueDefinition/Name eq '{queue_name}'"]
+        if status:
+            filter_parts.append(f"Status eq '{status}'")
+        filter_str = " and ".join(filter_parts)
+        path = f"QueueItems?$filter={filter_str}&$top={top}"
+        data = await self._request("GET", path)
+        items = []
+        for raw in data.get("value", []):
+            items.append(
+                QueueItem(
+                    item_id=str(raw.get("Id", "")),
+                    reference=str(raw.get("Reference", "")),
+                    specific_content=raw.get("SpecificContent", {}) or {},
+                    status=str(raw.get("Status", "")),
+                )
+            )
+        return items
+
+    async def release_queue_item(self, item_id: str, retry: bool = True) -> None:
+        """Abandon an in-progress queue item.
+
+        When a Performer job crashes mid-transaction, the SLA coordinator
+        calls this to let the item be re-leased by the next Performer run.
+        If ``retry=False``, marks the item as permanently failed.
+        """
+        await self.set_transaction_result(
+            transaction_id=item_id,
+            is_successful=False,
+            output={},
+            business_error="abandoned_by_coordinator" if not retry else "released_for_retry",
+        )
+
     # ----- Asset operations -----
 
     async def get_asset(self, name: str) -> Asset:

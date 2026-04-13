@@ -1,0 +1,2281 @@
+{
+  "policies": [
+    {
+      "policy_number": "POL-1001",
+      "holder": "Alice Johnson",
+      "coverage_start": "2025-01-01",
+      "coverage_end": "2026-12-31",
+      "deductible_remaining": 600.0,
+      "out_of_pocket_max": 5000.0
+    },
+    {
+      "policy_number": "POL-1002",
+      "holder": "Bob Martinez",
+      "coverage_start": "2025-01-01",
+      "coverage_end": "2026-12-31",
+      "deductible_remaining": 700.0,
+      "out_of_pocket_max": 5000.0
+    },
+    {
+      "policy_number": "POL-1003",
+      "holder": "Carol Nguyen",
+      "coverage_start": "2025-01-01",
+      "coverage_end": "2026-12-31",
+      "deductible_remaining": 800.0,
+      "out_of_pocket_max": 5000.0
+    },
+    {
+      "policy_number": "POL-1004",
+      "holder": "David Patel",
+      "coverage_start": "2025-01-01",
+      "coverage_end": "2026-12-31",
+      "deductible_remaining": 900.0,
+      "out_of_pocket_max": 5000.0
+    },
+    {
+      "policy_number": "POL-1005",
+      "holder": "Emma Wilson",
+      "coverage_start": "2025-01-01",
+      "coverage_end": "2026-12-31",
+      "deductible_remaining": 1000.0,
+      "out_of_pocket_max": 5000.0
+    },
+    {
+      "policy_number": "POL-1006",
+      "holder": "Frank Rodriguez",
+      "coverage_start": "2025-01-01",
+      "coverage_end": "2026-12-31",
+      "deductible_remaining": 1100.0,
+      "out_of_pocket_max": 5000.0
+    },
+    {
+      "policy_number": "POL-1007",
+      "holder": "Grace Kim",
+      "coverage_start": "2025-01-01",
+      "coverage_end": "2026-12-31",
+      "deductible_remaining": 1200.0,
+      "out_of_pocket_max": 5000.0
+    },
+    {
+      "policy_number": "POL-1008",
+      "holder": "Henry Brown",
+      "coverage_start": "2025-01-01",
+      "coverage_end": "2026-12-31",
+      "deductible_remaining": 1300.0,
+      "out_of_pocket_max": 5000.0
+    },
+    {
+      "policy_number": "POL-1009",
+      "holder": "Isabel Garcia",
+      "coverage_start": "2025-01-01",
+      "coverage_end": "2026-12-31",
+      "deductible_remaining": 1400.0,
+      "out_of_pocket_max": 5000.0
+    },
+    {
+      "policy_number": "POL-9999",
+      "holder": "Expired Eddie",
+      "coverage_start": "2022-01-01",
+      "coverage_end": "2023-12-31",
+      "deductible_remaining": 0.0,
+      "out_of_pocket_max": 5000.0
+    }
+  ],
+  "providers": [
+    {
+      "npi": "1000000001",
+      "name": "In-Network Clinic 1",
+      "in_network": true,
+      "specialty_code": "207R00000X"
+    },
+    {
+      "npi": "1000000002",
+      "name": "In-Network Clinic 2",
+      "in_network": true,
+      "specialty_code": "208000000X"
+    },
+    {
+      "npi": "1000000003",
+      "name": "In-Network Clinic 3",
+      "in_network": true,
+      "specialty_code": "207X00000X"
+    },
+    {
+      "npi": "1000000004",
+      "name": "In-Network Clinic 4",
+      "in_network": true,
+      "specialty_code": "207Q00000X"
+    },
+    {
+      "npi": "1000000005",
+      "name": "In-Network Clinic 5",
+      "in_network": true,
+      "specialty_code": "208D00000X"
+    },
+    {
+      "npi": "1000000006",
+      "name": "In-Network Clinic 6",
+      "in_network": true,
+      "specialty_code": "207T00000X"
+    },
+    {
+      "npi": "1000000007",
+      "name": "In-Network Clinic 7",
+      "in_network": true,
+      "specialty_code": "207V00000X"
+    },
+    {
+      "npi": "1000000008",
+      "name": "In-Network Clinic 8",
+      "in_network": true,
+      "specialty_code": "208600000X"
+    },
+    {
+      "npi": "1000000009",
+      "name": "In-Network Clinic 9",
+      "in_network": true,
+      "specialty_code": "207W00000X"
+    },
+    {
+      "npi": "1000000010",
+      "name": "In-Network Clinic 10",
+      "in_network": true,
+      "specialty_code": "207Y00000X"
+    },
+    {
+      "npi": "1000000011",
+      "name": "In-Network Clinic 11",
+      "in_network": true,
+      "specialty_code": "207Z00000X"
+    },
+    {
+      "npi": "1000000012",
+      "name": "In-Network Clinic 12",
+      "in_network": true,
+      "specialty_code": "208100000X"
+    },
+    {
+      "npi": "1000000013",
+      "name": "In-Network Clinic 13",
+      "in_network": true,
+      "specialty_code": "208200000X"
+    },
+    {
+      "npi": "1000000014",
+      "name": "In-Network Clinic 14",
+      "in_network": true,
+      "specialty_code": "208400000X"
+    },
+    {
+      "npi": "9999999999",
+      "name": "Out-of-Network Specialty",
+      "in_network": false,
+      "specialty_code": "207R00000X"
+    }
+  ],
+  "cases": [
+    {
+      "claim_id": "CLM-00000",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 200.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T08:00:00Z",
+      "provider_npi": "1000000001",
+      "notes": [
+        {
+          "filename": "discharge_summary_0.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_0.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00001",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "I10",
+      "procedure_code": "99214",
+      "total_amount": 215.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T09:00:00Z",
+      "provider_npi": "1000000002",
+      "notes": [
+        {
+          "filename": "discharge_summary_1.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_1.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00002",
+      "policy_number": "POL-1003",
+      "claimant_name": "Victor Vandermolen",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 230.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-05T10:00:00Z",
+      "provider_npi": "1000000003",
+      "notes": [
+        {
+          "filename": "discharge_summary_2.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_2.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00003",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 245.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T11:00:00Z",
+      "provider_npi": "1000000004",
+      "notes": [
+        {
+          "filename": "discharge_summary_3.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_3.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00004",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 260.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T12:00:00Z",
+      "provider_npi": "1000000005",
+      "notes": [
+        {
+          "filename": "discharge_summary_4.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_4.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00005",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 275.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T13:00:00Z",
+      "provider_npi": "1000000006",
+      "notes": [
+        {
+          "filename": "discharge_summary_5.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_5.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00006",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 290.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T14:00:00Z",
+      "provider_npi": "1000000007",
+      "notes": [
+        {
+          "filename": "discharge_summary_6.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_6.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00007",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 305.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T15:00:00Z",
+      "provider_npi": "1000000008",
+      "notes": [
+        {
+          "filename": "discharge_summary_7.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_7.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00008",
+      "policy_number": "POL-1009",
+      "claimant_name": "Victor Vandermolen",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 320.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-05T10:00:00Z",
+      "provider_npi": "1000000009",
+      "notes": [
+        {
+          "filename": "discharge_summary_8.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_8.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00009",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 335.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T17:00:00Z",
+      "provider_npi": "1000000010",
+      "notes": [
+        {
+          "filename": "discharge_summary_9.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_9.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00010",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 350.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T18:00:00Z",
+      "provider_npi": "1000000011",
+      "notes": [
+        {
+          "filename": "discharge_summary_10.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_10.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00011",
+      "policy_number": "POL-1003",
+      "claimant_name": "Carol Nguyen",
+      "diagnosis_code": "I10",
+      "procedure_code": "99214",
+      "total_amount": 365.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T19:00:00Z",
+      "provider_npi": "1000000012",
+      "notes": [
+        {
+          "filename": "discharge_summary_11.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_11.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00012",
+      "policy_number": "POL-9999",
+      "claimant_name": "Expired Eddie",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 380.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T08:00:00Z",
+      "provider_npi": "1000000013",
+      "notes": [
+        {
+          "filename": "discharge_summary_12.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_12.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00013",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 395.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T09:00:00Z",
+      "provider_npi": "1000000014",
+      "notes": [
+        {
+          "filename": "discharge_summary_13.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_13.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00014",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 410.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T10:00:00Z",
+      "provider_npi": "1000000001",
+      "notes": [
+        {
+          "filename": "discharge_summary_14.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_14.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00015",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 425.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T11:00:00Z",
+      "provider_npi": "1000000002",
+      "notes": [
+        {
+          "filename": "discharge_summary_15.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_15.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00016",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 440.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T12:00:00Z",
+      "provider_npi": "1000000003",
+      "notes": [
+        {
+          "filename": "discharge_summary_16.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_16.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00017",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 455.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T13:00:00Z",
+      "provider_npi": "1000000004",
+      "notes": [
+        {
+          "filename": "discharge_summary_17.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_17.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00018",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 470.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T14:00:00Z",
+      "provider_npi": "1000000005",
+      "notes": [
+        {
+          "filename": "discharge_summary_18.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_18.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00019",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 485.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T15:00:00Z",
+      "provider_npi": "1000000006",
+      "notes": [
+        {
+          "filename": "discharge_summary_19.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_19.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00020",
+      "policy_number": "POL-1003",
+      "claimant_name": "Victor Vandermolen",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 500.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-05T10:00:00Z",
+      "provider_npi": "1000000007",
+      "notes": [
+        {
+          "filename": "discharge_summary_20.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_20.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00021",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "I10",
+      "procedure_code": "99214",
+      "total_amount": 515.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T17:00:00Z",
+      "provider_npi": "1000000008",
+      "notes": [
+        {
+          "filename": "discharge_summary_21.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_21.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00022",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 530.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T18:00:00Z",
+      "provider_npi": "1000000009",
+      "notes": [
+        {
+          "filename": "discharge_summary_22.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_22.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00023",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 545.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T19:00:00Z",
+      "provider_npi": "1000000010",
+      "notes": [
+        {
+          "filename": "discharge_summary_23.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_23.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00024",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 560.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T08:00:00Z",
+      "provider_npi": "1000000011",
+      "notes": [
+        {
+          "filename": "discharge_summary_24.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_24.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00025",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 575.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T09:00:00Z",
+      "provider_npi": "1000000012",
+      "notes": [
+        {
+          "filename": "discharge_summary_25.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_25.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00026",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 590.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T10:00:00Z",
+      "provider_npi": "1000000013",
+      "notes": [
+        {
+          "filename": "discharge_summary_26.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_26.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00027",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 605.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T11:00:00Z",
+      "provider_npi": "1000000014",
+      "notes": [
+        {
+          "filename": "discharge_summary_27.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_27.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00028",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 620.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T12:00:00Z",
+      "provider_npi": "1000000001",
+      "notes": [
+        {
+          "filename": "discharge_summary_28.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_28.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00029",
+      "policy_number": "POL-1003",
+      "claimant_name": "Carol Nguyen",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 635.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T13:00:00Z",
+      "provider_npi": "1000000002",
+      "notes": [
+        {
+          "filename": "discharge_summary_29.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_29.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00030",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 650.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T14:00:00Z",
+      "provider_npi": "1000000003",
+      "notes": [
+        {
+          "filename": "discharge_summary_30.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_30.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00031",
+      "policy_number": "POL-1005",
+      "claimant_name": "Victor Vandermolen",
+      "diagnosis_code": "I10",
+      "procedure_code": "99214",
+      "total_amount": 665.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-05T10:00:00Z",
+      "provider_npi": "1000000004",
+      "notes": [
+        {
+          "filename": "discharge_summary_31.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_31.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00032",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 680.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T16:00:00Z",
+      "provider_npi": "1000000005",
+      "notes": [
+        {
+          "filename": "discharge_summary_32.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_32.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00033",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 695.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T17:00:00Z",
+      "provider_npi": "1000000006",
+      "notes": [
+        {
+          "filename": "discharge_summary_33.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_33.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00034",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 710.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T18:00:00Z",
+      "provider_npi": "1000000007",
+      "notes": [
+        {
+          "filename": "discharge_summary_34.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_34.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00035",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 725.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T19:00:00Z",
+      "provider_npi": "1000000008",
+      "notes": [
+        {
+          "filename": "discharge_summary_35.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_35.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00036",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 740.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T08:00:00Z",
+      "provider_npi": "1000000009",
+      "notes": [
+        {
+          "filename": "discharge_summary_36.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_36.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00037",
+      "policy_number": "POL-1002",
+      "claimant_name": "Victor Vandermolen",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 755.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T09:00:00Z",
+      "provider_npi": "1000000010",
+      "notes": [
+        {
+          "filename": "discharge_summary_37.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_37.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00038",
+      "policy_number": "POL-1003",
+      "claimant_name": "Carol Nguyen",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 770.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T10:00:00Z",
+      "provider_npi": "1000000011",
+      "notes": [
+        {
+          "filename": "discharge_summary_38.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_38.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00039",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 785.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T11:00:00Z",
+      "provider_npi": "1000000012",
+      "notes": [
+        {
+          "filename": "discharge_summary_39.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_39.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00040",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 800.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T12:00:00Z",
+      "provider_npi": "1000000013",
+      "notes": [
+        {
+          "filename": "discharge_summary_40.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_40.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00041",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "I10",
+      "procedure_code": "99214",
+      "total_amount": 815.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T13:00:00Z",
+      "provider_npi": "1000000014",
+      "notes": [
+        {
+          "filename": "discharge_summary_41.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_41.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00042",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 830.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T14:00:00Z",
+      "provider_npi": "1000000001",
+      "notes": [
+        {
+          "filename": "discharge_summary_42.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_42.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00043",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 845.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T15:00:00Z",
+      "provider_npi": "1000000002",
+      "notes": [
+        {
+          "filename": "discharge_summary_43.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_43.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00044",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 860.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T16:00:00Z",
+      "provider_npi": "1000000003",
+      "notes": [
+        {
+          "filename": "discharge_summary_44.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_44.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00045",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 875.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T17:00:00Z",
+      "provider_npi": "1000000004",
+      "notes": [
+        {
+          "filename": "discharge_summary_45.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_45.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00046",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 890.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T18:00:00Z",
+      "provider_npi": "1000000005",
+      "notes": [
+        {
+          "filename": "discharge_summary_46.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_46.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00047",
+      "policy_number": "POL-1003",
+      "claimant_name": "Carol Nguyen",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 905.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T19:00:00Z",
+      "provider_npi": "1000000006",
+      "notes": [
+        {
+          "filename": "discharge_summary_47.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_47.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00048",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 920.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T08:00:00Z",
+      "provider_npi": "1000000007",
+      "notes": [
+        {
+          "filename": "discharge_summary_48.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_48.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00049",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 935.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T09:00:00Z",
+      "provider_npi": "1000000008",
+      "notes": [
+        {
+          "filename": "discharge_summary_49.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_49.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00050",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 200.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T10:00:00Z",
+      "provider_npi": "1000000009",
+      "notes": [
+        {
+          "filename": "discharge_summary_50.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_50.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00051",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "I10",
+      "procedure_code": "99214",
+      "total_amount": 215.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T11:00:00Z",
+      "provider_npi": "1000000010",
+      "notes": [
+        {
+          "filename": "discharge_summary_51.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_51.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00052",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 230.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T12:00:00Z",
+      "provider_npi": "1000000011",
+      "notes": [
+        {
+          "filename": "discharge_summary_52.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_52.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00053",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 245.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T13:00:00Z",
+      "provider_npi": "1000000012",
+      "notes": [
+        {
+          "filename": "discharge_summary_53.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_53.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00054",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 260.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T14:00:00Z",
+      "provider_npi": "9999999999",
+      "notes": [
+        {
+          "filename": "discharge_summary_54.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_54.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00055",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 275.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T15:00:00Z",
+      "provider_npi": "1000000014",
+      "notes": [
+        {
+          "filename": "discharge_summary_55.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_55.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00056",
+      "policy_number": "POL-1003",
+      "claimant_name": "Carol Nguyen",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 290.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T16:00:00Z",
+      "provider_npi": "1000000001",
+      "notes": [
+        {
+          "filename": "discharge_summary_56.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_56.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00057",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 305.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T17:00:00Z",
+      "provider_npi": "1000000002",
+      "notes": [
+        {
+          "filename": "discharge_summary_57.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_57.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00058",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 320.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T18:00:00Z",
+      "provider_npi": "1000000003",
+      "notes": [
+        {
+          "filename": "discharge_summary_58.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_58.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00059",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 335.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T19:00:00Z",
+      "provider_npi": "1000000004",
+      "notes": [
+        {
+          "filename": "discharge_summary_59.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_59.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00060",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 350.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T08:00:00Z",
+      "provider_npi": "1000000005",
+      "notes": [
+        {
+          "filename": "discharge_summary_60.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_60.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00061",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "I10",
+      "procedure_code": "99214",
+      "total_amount": 365.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T09:00:00Z",
+      "provider_npi": "1000000006",
+      "notes": [
+        {
+          "filename": "discharge_summary_61.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_61.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00062",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 380.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T10:00:00Z",
+      "provider_npi": "1000000007",
+      "notes": [
+        {
+          "filename": "discharge_summary_62.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_62.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00063",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 395.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T11:00:00Z",
+      "provider_npi": "1000000008",
+      "notes": [
+        {
+          "filename": "discharge_summary_63.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_63.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00064",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 410.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T12:00:00Z",
+      "provider_npi": "1000000009",
+      "notes": [
+        {
+          "filename": "discharge_summary_64.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_64.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00065",
+      "policy_number": "POL-1003",
+      "claimant_name": "Carol Nguyen",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 425.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T13:00:00Z",
+      "provider_npi": "1000000010",
+      "notes": [
+        {
+          "filename": "discharge_summary_65.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_65.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00066",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 440.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T14:00:00Z",
+      "provider_npi": "1000000011",
+      "notes": [
+        {
+          "filename": "discharge_summary_66.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_66.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00067",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 455.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T15:00:00Z",
+      "provider_npi": "1000000012",
+      "notes": [
+        {
+          "filename": "discharge_summary_67.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_67.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00068",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 470.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T16:00:00Z",
+      "provider_npi": "1000000013",
+      "notes": [
+        {
+          "filename": "discharge_summary_68.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_68.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00069",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 485.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T17:00:00Z",
+      "provider_npi": "1000000014",
+      "notes": [
+        {
+          "filename": "discharge_summary_69.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_69.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00070",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 500.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T18:00:00Z",
+      "provider_npi": "1000000001",
+      "notes": [
+        {
+          "filename": "discharge_summary_70.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_70.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00071",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "I10",
+      "procedure_code": "99203",
+      "total_amount": 515.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T19:00:00Z",
+      "provider_npi": "1000000002",
+      "notes": [
+        {
+          "filename": "incomplete.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00072",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 530.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T08:00:00Z",
+      "provider_npi": "1000000003",
+      "notes": [
+        {
+          "filename": "discharge_summary_72.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_72.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00073",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 545.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T09:00:00Z",
+      "provider_npi": "1000000004",
+      "notes": [
+        {
+          "filename": "discharge_summary_73.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_73.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00074",
+      "policy_number": "POL-1003",
+      "claimant_name": "Carol Nguyen",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 560.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T10:00:00Z",
+      "provider_npi": "1000000005",
+      "notes": [
+        {
+          "filename": "discharge_summary_74.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_74.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00075",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 575.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T11:00:00Z",
+      "provider_npi": "1000000006",
+      "notes": [
+        {
+          "filename": "discharge_summary_75.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_75.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00076",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 590.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T12:00:00Z",
+      "provider_npi": "1000000007",
+      "notes": [
+        {
+          "filename": "discharge_summary_76.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_76.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00077",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 605.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T13:00:00Z",
+      "provider_npi": "1000000008",
+      "notes": [
+        {
+          "filename": "discharge_summary_77.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_77.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00078",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 620.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T14:00:00Z",
+      "provider_npi": "1000000009",
+      "notes": [
+        {
+          "filename": "discharge_summary_78.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_78.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00079",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 635.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T15:00:00Z",
+      "provider_npi": "1000000010",
+      "notes": [
+        {
+          "filename": "discharge_summary_79.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_79.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00080",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 650.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T16:00:00Z",
+      "provider_npi": "1000000011",
+      "notes": [
+        {
+          "filename": "discharge_summary_80.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_80.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00081",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "I10",
+      "procedure_code": "99214",
+      "total_amount": 665.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T17:00:00Z",
+      "provider_npi": "1000000012",
+      "notes": [
+        {
+          "filename": "discharge_summary_81.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_81.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00082",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 680.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T18:00:00Z",
+      "provider_npi": "1000000013",
+      "notes": [
+        {
+          "filename": "discharge_summary_82.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_82.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00083",
+      "policy_number": "POL-1003",
+      "claimant_name": "Carol Nguyen",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 695.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T19:00:00Z",
+      "provider_npi": "1000000014",
+      "notes": [
+        {
+          "filename": "discharge_summary_83.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_83.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00084",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 710.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T08:00:00Z",
+      "provider_npi": "1000000001",
+      "notes": [
+        {
+          "filename": "discharge_summary_84.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_84.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00085",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 725.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T09:00:00Z",
+      "provider_npi": "1000000002",
+      "notes": [
+        {
+          "filename": "discharge_summary_85.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_85.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00086",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 740.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T10:00:00Z",
+      "provider_npi": "1000000003",
+      "notes": [
+        {
+          "filename": "discharge_summary_86.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_86.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00087",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 755.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T11:00:00Z",
+      "provider_npi": "1000000004",
+      "notes": [
+        {
+          "filename": "discharge_summary_87.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_87.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00088",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 15000.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T12:00:00Z",
+      "provider_npi": "1000000005",
+      "notes": [
+        {
+          "filename": "discharge_summary_88.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_88.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00089",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 785.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T13:00:00Z",
+      "provider_npi": "1000000006",
+      "notes": [
+        {
+          "filename": "discharge_summary_89.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_89.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00090",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "M79.3",
+      "procedure_code": "99213",
+      "total_amount": 800.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T14:00:00Z",
+      "provider_npi": "1000000007",
+      "notes": [
+        {
+          "filename": "discharge_summary_90.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_90.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00091",
+      "policy_number": "POL-1002",
+      "claimant_name": "Bob Martinez",
+      "diagnosis_code": "I10",
+      "procedure_code": "99214",
+      "total_amount": 815.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T15:00:00Z",
+      "provider_npi": "1000000008",
+      "notes": [
+        {
+          "filename": "discharge_summary_91.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_91.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00092",
+      "policy_number": "POL-1003",
+      "claimant_name": "Carol Nguyen",
+      "diagnosis_code": "E11.9",
+      "procedure_code": "99215",
+      "total_amount": 830.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T16:00:00Z",
+      "provider_npi": "1000000009",
+      "notes": [
+        {
+          "filename": "discharge_summary_92.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_92.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00093",
+      "policy_number": "POL-1004",
+      "claimant_name": "David Patel",
+      "diagnosis_code": "J06.9",
+      "procedure_code": "99203",
+      "total_amount": 845.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T17:00:00Z",
+      "provider_npi": "1000000010",
+      "notes": [
+        {
+          "filename": "discharge_summary_93.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_93.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00094",
+      "policy_number": "POL-1005",
+      "claimant_name": "Emma Wilson",
+      "diagnosis_code": "K21.0",
+      "procedure_code": "99204",
+      "total_amount": 860.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T18:00:00Z",
+      "provider_npi": "1000000011",
+      "notes": [
+        {
+          "filename": "discharge_summary_94.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_94.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00095",
+      "policy_number": "POL-1006",
+      "claimant_name": "Frank Rodriguez",
+      "diagnosis_code": "R51",
+      "procedure_code": "99205",
+      "total_amount": 875.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-10T19:00:00Z",
+      "provider_npi": "1000000012",
+      "notes": [
+        {
+          "filename": "discharge_summary_95.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_95.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00096",
+      "policy_number": "POL-1007",
+      "claimant_name": "Grace Kim",
+      "diagnosis_code": "M25.511",
+      "procedure_code": "93000",
+      "total_amount": 890.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-11T08:00:00Z",
+      "provider_npi": "1000000013",
+      "notes": [
+        {
+          "filename": "discharge_summary_96.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_96.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00097",
+      "policy_number": "POL-1008",
+      "claimant_name": "Henry Brown",
+      "diagnosis_code": "R05",
+      "procedure_code": "80053",
+      "total_amount": 905.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-12T09:00:00Z",
+      "provider_npi": "1000000014",
+      "notes": [
+        {
+          "filename": "discharge_summary_97.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_97.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00098",
+      "policy_number": "POL-1009",
+      "claimant_name": "Isabel Garcia",
+      "diagnosis_code": "R07.9",
+      "procedure_code": "85025",
+      "total_amount": 920.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-13T10:00:00Z",
+      "provider_npi": "1000000001",
+      "notes": [
+        {
+          "filename": "discharge_summary_98.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_98.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-00099",
+      "policy_number": "POL-1001",
+      "claimant_name": "Alice Johnson",
+      "diagnosis_code": "G43.909",
+      "procedure_code": "71045",
+      "total_amount": 935.0,
+      "currency": "USD",
+      "submitted_at": "2026-04-14T11:00:00Z",
+      "provider_npi": "1000000002",
+      "notes": [
+        {
+          "filename": "discharge_summary_99.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        },
+        {
+          "filename": "lab_results_99.pdf",
+          "content_b64": "JVBERi0xLjQKJSA="
+        }
+      ]
+    }
+  ],
+  "fault_indices": {
+    "expired_policy": 12,
+    "fraud_velocity": 37,
+    "out_of_network": 54,
+    "missing_docs": 71,
+    "amount_over_threshold": 88
+  }
+}

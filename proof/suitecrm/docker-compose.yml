@@ -1,0 +1,65 @@
+# Local SuiteCRM 8 for the claims-adjudication SLA proof.
+#
+# Usage:
+#   cd proof/suitecrm
+#   cp .env.example .env                # fill in SC_DB_PASSWORD + admin creds
+#   docker compose --env-file .env up -d
+#   # Wait ~60s for MariaDB + SuiteCRM bootstrap.
+#   # Visit http://localhost:${SC_HTTP_PORT:-8080}/ to complete the installer,
+#   # then create an OAuth2 password-grant client in the Admin panel.
+#   # Plug the resulting client_id + client_secret into your top-level .env
+#   # so proof/run_sla_claims.py can authenticate.
+#
+# Expose publicly for UiPath Community Cloud via cloudflared:
+#   cloudflared tunnel --url http://localhost:8080
+# paste the https://*.trycloudflare.com URL into .env as SUITECRM_PUBLIC_URL.
+#
+# Security note: no literal credentials anywhere in this YAML. Every value
+# is read from docker compose --env-file, and the real .env is gitignored.
+
+services:
+  suitecrm-db:
+    image: mariadb:10.11
+    container_name: suitecrm-db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${SC_DB_ROOT_PASSWORD:?set SC_DB_ROOT_PASSWORD in proof/suitecrm/.env}
+      MARIADB_DATABASE: ${SC_DB_NAME:?set SC_DB_NAME in proof/suitecrm/.env}
+      MARIADB_USER: ${SC_DB_USER:?set SC_DB_USER in proof/suitecrm/.env}
+      MARIADB_PASSWORD: ${SC_DB_PASSWORD:?set SC_DB_PASSWORD in proof/suitecrm/.env}
+    volumes:
+      - suitecrm-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  suitecrm:
+    # Bitnami deprecated the `bitnami/suitecrm:8` tag in 2025; the
+    # frozen-in-time image lives at `bitnamilegacy/suitecrm` now. We pin
+    # 8.8.1 specifically so the OAuth2 Passport client registration
+    # endpoint is available.
+    image: bitnamilegacy/suitecrm:8.8.1
+    container_name: suitecrm-web
+    depends_on:
+      suitecrm-db:
+        condition: service_healthy
+    ports:
+      - "${SC_HTTP_PORT:-8080}:8080"
+      - "${SC_HTTPS_PORT:-8443}:8443"
+    environment:
+      SUITECRM_DATABASE_HOST: suitecrm-db
+      SUITECRM_DATABASE_PORT_NUMBER: "3306"
+      SUITECRM_DATABASE_NAME: ${SC_DB_NAME:?set SC_DB_NAME in proof/suitecrm/.env}
+      SUITECRM_DATABASE_USER: ${SC_DB_USER:?set SC_DB_USER in proof/suitecrm/.env}
+      SUITECRM_DATABASE_PASSWORD: ${SC_DB_PASSWORD:?set SC_DB_PASSWORD in proof/suitecrm/.env}
+      SUITECRM_USERNAME: ${SC_ADMIN_USER:?set SC_ADMIN_USER in proof/suitecrm/.env}
+      SUITECRM_PASSWORD: ${SC_ADMIN_PASSWORD:?set SC_ADMIN_PASSWORD in proof/suitecrm/.env}
+      SUITECRM_EMAIL: ${SC_ADMIN_EMAIL:-admin@example.test}
+      SUITECRM_HOST: ${SUITECRM_HOST:-localhost}
+    volumes:
+      - suitecrm-web-data:/bitnami/suitecrm
+
+volumes:
+  suitecrm-db-data:
+  suitecrm-web-data:
