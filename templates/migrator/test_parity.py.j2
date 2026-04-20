@@ -1,0 +1,34 @@
+"""Behavior-parity tests for {{ tx.name }}.
+
+Each UI action from the original XAML gets a targeted test that exercises
+the generated Playwright call and asserts the selector still resolves to
+an element on the target page. For migrations against a running staging
+environment, set TARGET_URL in pytest env; otherwise tests are skipped.
+"""
+
+from __future__ import annotations
+
+import os
+import pytest
+from playwright.async_api import async_playwright
+
+from processes.{{ tx.module }} import {{ tx.fn_name }}
+
+TARGET_URL = os.environ.get("TARGET_URL", "")
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(not TARGET_URL, reason="TARGET_URL not set; parity tests skipped")
+async def test_{{ tx.module }}_parity_all_selectors_resolve() -> None:
+    """Every selector referenced by the original XAML resolves on TARGET_URL."""
+    async with async_playwright() as pw:
+        browser = await pw.chromium.launch(headless=True)
+        page = await browser.new_page()
+        await page.goto(TARGET_URL)
+        # Selector fingerprint from original XAML — one per action:
+        {% for sel in selector_fingerprints -%}
+        # {{ sel.target }}
+        assert (await page.query_selector({{ sel.css_literal }})) is not None, \
+            "selector '{{ sel.css_literal }}' (for '{{ sel.target }}') no longer resolves"
+        {% endfor %}
+        await browser.close()

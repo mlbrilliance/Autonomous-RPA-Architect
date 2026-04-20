@@ -1,0 +1,27 @@
+"""{{ tx.name }} — migrated process flow.
+
+Generated from a UiPath REFramework Process.xaml by
+:mod:`rpa_architect.migrator`. Each step corresponds to one UiPath Sequence
+block; each action is one UI activity (Click, TypeInto, GetText, …) translated
+to its Playwright equivalent.
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+from playwright.async_api import Page
+
+logger = logging.getLogger("{{ tx.module }}")
+
+
+async def {{ tx.fn_name }}(page: Page, inputs: dict[str, Any]) -> dict[str, Any]:
+    """Run the migrated {{ tx.name }} flow on an already-open Playwright Page."""
+    outputs: dict[str, Any] = {}
+    {% for step in tx.steps -%}
+    # ── Step {{ step.id }}: {{ step.description or step.type }} ───
+    {% for call in step.calls -%}
+    {{ call }}
+    {% endfor %}
+    {% endfor %}
+    return outputs

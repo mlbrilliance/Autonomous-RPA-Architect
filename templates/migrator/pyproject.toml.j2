@@ -1,0 +1,17 @@
+[project]
+name = "{{ process_name | lower }}-migrated"
+version = "0.1.0"
+description = "Migrated from UiPath REFramework by Autonomous RPA Architect"
+requires-python = ">=3.11"
+dependencies = [
+    "playwright>=1.48",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
