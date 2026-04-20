@@ -135,11 +135,14 @@ def _render_parity(tx: dict[str, Any]) -> str:
     assertions: list[str] = []
     for sel in tx["selector_fingerprints"]:
         assertions.append(f"        # {sel['target']}")
-        assertions.append(
-            f"        assert (await page.query_selector({sel['css_literal']})) is not None, \\"
+        # Build the error message as a Python literal so any quotes inside the
+        # CSS selector are properly escaped by repr().
+        msg_literal = repr(
+            f"selector {sel['css_literal']} for {sel['target']!r} no longer resolves"
         )
         assertions.append(
-            f"            \"selector {sel['css_literal']} for '{sel['target']}' no longer resolves\""
+            f"        assert (await page.query_selector({sel['css_literal']})) is not None, "
+            f"{msg_literal}"
         )
     assertion_block = "\n".join(assertions) if assertions else "        pass"
 
