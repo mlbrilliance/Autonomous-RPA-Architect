@@ -259,3 +259,14 @@ class LifecycleState(BaseModel):
     max_iterations: int = 3
     errors: list[str] = Field(default_factory=list)
     history: list[LifecycleEvent] = Field(default_factory=list)
+    # Populated by the Self-Healing Swarm node when a faulted job was auto-patched.
+    # None when swarm is disabled or no heal was attempted. Carries the PR URL
+    # so downstream nodes can reference the opened fix.
+    swarm_pr_url: str = Field(
+        default="",
+        description="GitHub PR URL opened by the Self-Healing Swarm for this iteration.",
+    )
+    swarm_requires_escalation: bool = Field(
+        default=False,
+        description="Swarm attempted heal but requires human review (no actionable candidate or staging failed).",
+    )
