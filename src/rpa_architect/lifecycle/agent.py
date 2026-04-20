@@ -1,4 +1,12 @@
-"""LangGraph lifecycle agent: author → deploy → monitor → diagnose → fix loop."""
+"""LangGraph lifecycle agent: author → deploy → monitor → diagnose → fix loop.
+
+With Task #5 the graph gains an optional Self-Healing Swarm branch. When
+:func:`create_lifecycle_graph` is called without a swarm, the topology is
+unchanged — the existing 1119 tests stay green. When called with a
+``SwarmOrchestrator``, a new ``swarm_heal`` node runs after ``diagnose``
+and either opens a PR (short-circuiting the propose_fix branch) or
+escalates to the existing approval gate.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +16,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
 from rpa_architect.lifecycle.state import LifecycleState
+from rpa_architect.lifecycle.swarm.graph import SwarmOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +61,18 @@ def _route_after_apply(state: LifecycleState) -> str:
     return END
 
 
-def create_lifecycle_graph() -> CompiledStateGraph:
+def _route_after_swarm(state: LifecycleState) -> str:
+    """After swarm: PR opened → END; escalation → propose_fix; error → END."""
+    if state.swarm_pr_url:
+        return END
+    if state.swarm_requires_escalation:
+        return "propose_fix"
+    return END
+
+
+def create_lifecycle_graph(
+    swarm: SwarmOrchestrator | None = None,
+) -> CompiledStateGraph:
     """Build and compile the lifecycle agent graph.
 
     Topology::
@@ -109,11 +129,28 @@ def create_lifecycle_graph() -> CompiledStateGraph:
         {"diagnose": "diagnose", END: END},
     )
 
-    graph.add_conditional_edges(
-        "diagnose",
-        _route_after_diagnose,
-        {"propose_fix": "propose_fix", END: END},
-    )
+    if swarm is not None:
+        from rpa_architect.lifecycle.swarm.node import build_swarm_node
+
+        graph.add_node("swarm_heal", build_swarm_node(swarm))
+        graph.add_conditional_edges(
+            "diagnose",
+            lambda s: "swarm_heal"
+            if (s.diagnosis and s.diagnosis.recommended_action in ("fix_code", "update_selectors", "update_config"))
+            else END,
+            {"swarm_heal": "swarm_heal", END: END},
+        )
+        graph.add_conditional_edges(
+            "swarm_heal",
+            _route_after_swarm,
+            {"propose_fix": "propose_fix", END: END},
+        )
+    else:
+        graph.add_conditional_edges(
+            "diagnose",
+            _route_after_diagnose,
+            {"propose_fix": "propose_fix", END: END},
+        )
 
     graph.add_edge("propose_fix", "approval_gate")
 

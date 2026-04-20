@@ -723,6 +723,73 @@ class UiPathClient:
         data = await self._request("GET", path)
         return data.get("value", [])
 
+    async def get_job_details(self, job_id: str) -> dict[str, Any]:
+        """Fetch the full OData Job record (state, Info, ReleaseName, timing).
+
+        Extends :meth:`get_job_status`, which only returns a minimal
+        ``JobStatus`` dataclass. The swarm's failure bundler needs the raw
+        record so it can keep fields Orchestrator adds over time without
+        a dataclass migration.
+        """
+        return await self._request("GET", f"Jobs({job_id})")
+
+    async def download_package_nupkg(self, process_key: str) -> bytes:
+        """Download the currently-deployed ``.nupkg`` for ``process_key``.
+
+        Two-step flow (the Orchestrator API does not expose a direct
+        release → nupkg endpoint):
+        1. Resolve the latest package version for the process via
+           ``GET Processes?$filter=Key eq '…'``.
+        2. ``POST Processes/UiPath.Server.Configuration.OData.DownloadPackage``
+           with the resolved Key/Version — the response body is the raw
+           zip bytes. No authentication is stripped on the download URL
+           since we re-use the session bearer token.
+
+        Returns empty bytes if the process cannot be located (e.g. deleted
+        between deploy and heal). The caller decides whether empty means
+        "skip XAML analysis" or "fail the swarm".
+        """
+        try:
+            listing = await self._request(
+                "GET",
+                f"Processes?$filter=Key eq '{process_key}'&$top=1",
+            )
+        except httpx.HTTPStatusError as exc:
+            logger.debug("package lookup failed for %s: %s", process_key, exc)
+            return b""
+
+        items = listing.get("value", [])
+        if not items:
+            logger.warning("no package found for process %s", process_key)
+            return b""
+
+        pkg_key = items[0].get("Key") or process_key
+        pkg_version = items[0].get("Version") or items[0].get("ProcessVersion") or "1.0.0"
+
+        http = await self._get_http()
+        headers = await self._headers()
+        url = (
+            f"{self._base_url_sync()}/"
+            "Processes/UiPath.Server.Configuration.OData.DownloadPackage"
+        )
+        # Orchestrator accepts the pkg key as query or body; body is the
+        # documented form and avoids URL-encoding headaches with weird names.
+        resp = await http.post(
+            url,
+            headers=headers,
+            json={"key": pkg_key, "version": pkg_version},
+        )
+        if resp.status_code >= 400:
+            logger.error(
+                "DownloadPackage %s@%s -> %d: %s",
+                pkg_key,
+                pkg_version,
+                resp.status_code,
+                resp.text[:400],
+            )
+            return b""
+        return resp.content
+
     # ----- Bucket operations -----
 
     async def upload_to_bucket(

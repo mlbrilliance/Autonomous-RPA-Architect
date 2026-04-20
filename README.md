@@ -30,6 +30,73 @@ _Author → Deploy → Monitor → Diagnose → Fix — the full lifecycle, in a
 
 ---
 
+## What's New in v0.7.0 — Self-Healing Swarm + XAML Migrator
+
+v0.5 and v0.6 closed the _author → deploy → monitor_ loop. v0.7 closes the other half: **keep deployed bots alive** and **retire legacy XAML estates**. Two features, one shared XAML-AST foundation.
+
+<table>
+<tr>
+<td width="50%">
+
+**Self-Healing Swarm** — When a deployed job faults, a LangGraph sub-graph fans out to four parallel specialists (`selector_repair`, `null_exception`, `timing_repair`, `business_rule`). Each inspects the `FailureBundle` — exception, robot logs, and the deployed `.nupkg` unpacked to its original XAMLs — and either emits a `FixCandidate` with a concrete `XamlPatch` or returns `None`. The arbiter prefers actionable candidates over high-confidence diagnostics; the staging validator deploys the winning patch to a `Shared/Staging` folder, runs one transaction, and only on success does `gh pr create` open a PR against `main` with the exception, before/after selector diff, rationale, and staging run URL. The original `diagnose → propose_fix` path remains available for escalations the swarm cannot auto-patch.
+
+</td>
+<td width="50%">
+
+**Shared XAML-AST layer** — `rpa_architect.xaml_ast` (`read_xaml`, `write_xaml`, `extract_selectors`, `patch_selector`) parses UiPath XAML via `lxml` with XXE-hardened settings, builds a typed tree of `XamlActivity` / `XamlSelector` / `XamlDocument` dataclasses, flattens property-element wrappers (`<ui:Click.Target>`), and preserves attribute order + namespace declarations on round-trip so UiPath Studio's diff stays clean. Every selector carries a direct `lxml` element reference, bypassing xpath-evaluator fragility across XAML's mixed default/prefixed namespaces. 31 tests including XXE entity-expansion hardening and REFramework `Main.xaml.j2` round-trip fidelity.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Four specialists, one arbiter** — `SelectorRepairSpecialist` is the only agent that auto-patches: it matches the broken selector by activity display name or selector fragment, delegates to an injected `Harvester` (Playwright adapter in prod, `FakeHarvester` in tests), and writes the replacement via `patch_selector` + `write_xaml`. The other three refuse to guess — `NullExceptionSpecialist` emits `code_bug` with 0.45 confidence and no patches, `TimingRepairSpecialist` emits `system_timeout` with 0.55 and no patches, `BusinessRuleSpecialist` always escalates (business rules are semantic, not bugs). The arbiter's rules are pure-functional: prefer candidates with patches, tie-break on confidence, escalate on empty.
+
+</td>
+<td width="50%">
+
+**XAML → Python+Playwright Migrator** _(scoped to REFramework dispatcher)_ — `rpa_architect.migrator.lift_xaml_bundle` walks `Main.xaml` via the shared xaml_ast, asserts the four canonical REFramework states (`Init`, `GetTransactionData`, `ProcessTransaction`, `EndProcess`), then lifts `Process.xaml`'s UI activities into `ProcessIR.transactions[0].steps`. `emit_project(ir, out_dir)` renders `main.py` + `processes/process_<tx>.py` + `tests/test_parity_<tx>.py` + `pyproject.toml`. Every generated `.py` passes `ast.parse`; `proof/demo_migrate.py` exercises the full pipeline on a 7-activity fixture (TypeInto, SelectItem, Check, Click, WaitUiElementAppear, GetText) in <1 s. Anything outside the REFramework shape raises `UnsupportedPatternError` with the specific violation — no silent partial migrations.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Demo script — `proof/demo_self_heal.py`** — Offline mode (default) drives the swarm against an `httpx.MockTransport` Orchestrator and a `FakeRunner` for `gh`/`git`. Asserts: the patched `Main.xaml` no longer contains `submit-invoice-btn-stale`, now contains the harvested replacement, a PR URL came back from `gh pr create`, and staging reported Successful. Live mode (`RPA_LIVE=1 --live --job-id <key>`) hits real Community Cloud via `build_default_swarm`. Runs in <1 second offline.
+
+</td>
+<td width="50%">
+
+**LangGraph integration is opt-in** — `create_lifecycle_graph(swarm=None)` preserves v0.6 behavior. When called with a `SwarmOrchestrator`, a new `swarm_heal` node sits between `diagnose` and `propose_fix`, routing PR-opened → `END` and escalation → `propose_fix`. 165 tests green (64 new v0.7, 101 existing lifecycle untouched). The swarm state carries a `swarm_pr_url` + `swarm_requires_escalation` on `LifecycleState`; the existing `approval_gate` owns human review when escalation fires.
+
+</td>
+</tr>
+</table>
+
+### What's actually running
+
+| Capability | v0.6 (Claims) | v0.7 (Heal + Migrate) |
+|---|---|---|
+| Shared XAML AST (read / write / extract / patch) with round-trip fidelity | — | ✅ 31 tests |
+| FailureBundle fetcher (Job(id) + RobotLogs + DownloadPackage) against Orchestrator | — | ✅ 6 tests |
+| Four specialists with mutually-exclusive exception-type routing | — | ✅ 9 tests |
+| Arbiter (prefer patches → confidence → escalate) | — | ✅ 4 tests |
+| Staging validator (rebuild nupkg, deploy to Shared/Staging, invoke, poll) | — | ✅ 3 tests |
+| PR opener (auto-heal branch → commit → `gh pr create` with structured body) | — | ✅ 3 tests |
+| SwarmOrchestrator fan-out via `asyncio.gather` with exception isolation | — | ✅ 4 tests |
+| `create_lifecycle_graph(swarm=…)` optional wiring, existing graph unchanged | — | ✅ 3 tests |
+| `proof/demo_self_heal.py` offline end-to-end (sub-second) | — | ✅ |
+| XAML migrator: `ir_lifter` REFramework → ProcessIR | — | ✅ 9 tests |
+| XAML migrator: `selector_translator` UiPath XML → Playwright locator | — | ✅ 9 tests |
+| XAML migrator: `activity_map` UIAction → Playwright call | — | ✅ 8 tests |
+| XAML migrator: `emit_project` ProcessIR → runnable Python dir | — | ✅ 8 tests |
+| `proof/demo_migrate.py` end-to-end (7 activities, sub-second) | — | ✅ |
+| v0.6 claims factory live run (100 cases, 5 min on Community Cloud) | ✅ | ✅ (unchanged) |
+
+Full integration: `src/rpa_architect/xaml_ast/` (foundation), `src/rpa_architect/lifecycle/swarm/` (~1 100 LOC), `src/rpa_architect/migrator/` (~700 LOC), `proof/demo_self_heal.py` + `proof/demo_migrate.py` (demo drivers), `tests/test_swarm/` + `tests/test_xaml_ast/` + `tests/test_migrator/` (99 new tests).
+
+---
+
 ## What's New in v0.6.0 — Claims Adjudication Factory (Dispatcher + Performer + Reporter)
 
 The v0.5 Invoice Factory was a single-process REFramework state machine. v0.6 is the next tier: **three separately-packaged UiPath processes** coordinating through an Orchestrator queue, targeting medical insurance claims adjudication in SuiteCRM 8. Built to stress the Community Cloud free tier — 1 unattended robot slot, no schedule trigger API, .NET 8 Portable runtime — with a 2-hour SLA target of 50 claims/hour.

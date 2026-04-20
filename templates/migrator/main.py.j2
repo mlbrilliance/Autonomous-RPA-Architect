@@ -1,0 +1,37 @@
+"""{{ process_name }} — migrated from UiPath REFramework to Python + Playwright.
+
+Entry point: imports each transaction's process_* module, sets up a Playwright
+browser context, and runs the transactions in sequence. Queue-polling loops
+from the REFramework are intentionally NOT replicated — the migration target
+is behavior-equivalent code that a Python RPA engineer can adopt, not a
+drop-in Orchestrator substitute.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from playwright.async_api import async_playwright
+
+{% for tx in transactions -%}
+from processes.{{ tx.module }} import {{ tx.fn_name }}
+{% endfor %}
+
+logger = logging.getLogger("{{ process_name | lower }}")
+
+
+async def main() -> None:
+    async with async_playwright() as pw:
+        browser = await pw.chromium.launch(headless=False)
+        context = await browser.new_context()
+        page = await context.new_page()
+        {% for tx in transactions -%}
+        logger.info("running {{ tx.name }}")
+        await {{ tx.fn_name }}(page, {})
+        {% endfor %}
+        await browser.close()
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(main())
