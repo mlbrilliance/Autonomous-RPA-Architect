@@ -55,7 +55,7 @@ v0.5 and v0.6 closed the _author → deploy → monitor_ loop. v0.7 closes the o
 </td>
 <td width="50%">
 
-**XAML → Python+Playwright Migrator** _(scoped to REFramework dispatcher)_ — Reads a `.xaml`, lifts it through the language-agnostic `ProcessIR`, emits idiomatic async Python with Playwright locators chosen by priority (data-testid → id → name → aria-label → text → xpath). Behavior-parity tests generated from the original selectors fire the equivalent Playwright flow and compare DOM fingerprints. Any XAML outside the REFramework dispatcher shape raises `UnsupportedPatternError` with a helpful message — scope is explicitly narrow to avoid the "boil the ocean" failure mode that kills most migration tools.
+**XAML → Python+Playwright Migrator** _(scoped to REFramework dispatcher)_ — `rpa_architect.migrator.lift_xaml_bundle` walks `Main.xaml` via the shared xaml_ast, asserts the four canonical REFramework states (`Init`, `GetTransactionData`, `ProcessTransaction`, `EndProcess`), then lifts `Process.xaml`'s UI activities into `ProcessIR.transactions[0].steps`. `emit_project(ir, out_dir)` renders `main.py` + `processes/process_<tx>.py` + `tests/test_parity_<tx>.py` + `pyproject.toml`. Every generated `.py` passes `ast.parse`; `proof/demo_migrate.py` exercises the full pipeline on a 7-activity fixture (TypeInto, SelectItem, Check, Click, WaitUiElementAppear, GetText) in <1 s. Anything outside the REFramework shape raises `UnsupportedPatternError` with the specific violation — no silent partial migrations.
 
 </td>
 </tr>
@@ -86,10 +86,14 @@ v0.5 and v0.6 closed the _author → deploy → monitor_ loop. v0.7 closes the o
 | SwarmOrchestrator fan-out via `asyncio.gather` with exception isolation | — | ✅ 4 tests |
 | `create_lifecycle_graph(swarm=…)` optional wiring, existing graph unchanged | — | ✅ 3 tests |
 | `proof/demo_self_heal.py` offline end-to-end (sub-second) | — | ✅ |
-| XAML → Python+Playwright migrator (REFramework dispatcher pattern only) | — | ✅ |
+| XAML migrator: `ir_lifter` REFramework → ProcessIR | — | ✅ 9 tests |
+| XAML migrator: `selector_translator` UiPath XML → Playwright locator | — | ✅ 9 tests |
+| XAML migrator: `activity_map` UIAction → Playwright call | — | ✅ 8 tests |
+| XAML migrator: `emit_project` ProcessIR → runnable Python dir | — | ✅ 8 tests |
+| `proof/demo_migrate.py` end-to-end (7 activities, sub-second) | — | ✅ |
 | v0.6 claims factory live run (100 cases, 5 min on Community Cloud) | ✅ | ✅ (unchanged) |
 
-Full integration docs: `docs/swarm_architecture.md` (architecture + arbiter rules), `src/rpa_architect/lifecycle/swarm/` (~1 100 LOC), `proof/demo_self_heal.py` (demo driver), `tests/test_swarm/` + `tests/test_xaml_ast/` (64 new tests).
+Full integration: `src/rpa_architect/xaml_ast/` (foundation), `src/rpa_architect/lifecycle/swarm/` (~1 100 LOC), `src/rpa_architect/migrator/` (~700 LOC), `proof/demo_self_heal.py` + `proof/demo_migrate.py` (demo drivers), `tests/test_swarm/` + `tests/test_xaml_ast/` + `tests/test_migrator/` (99 new tests).
 
 ---
 
