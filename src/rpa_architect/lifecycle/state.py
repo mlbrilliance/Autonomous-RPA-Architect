@@ -159,6 +159,78 @@ class DriftReport(BaseModel):
     recommendation: str = Field(description="Recommended action.")
 
 
+class FailureBundle(BaseModel):
+    """Everything the swarm needs about one faulted job.
+
+    Composed by ``lifecycle.swarm.failure_bundle.FailureBundleFetcher`` from
+    three Orchestrator endpoints (Jobs(id), RobotLogs, DownloadPackage) plus
+    any artifact URLs returned in the job record.
+    """
+
+    job_id: str = Field(description="UiPath job key.")
+    process_key: str = Field(description="Release / process name.")
+    release_key: str = Field(default="", description="Release key (distinct from process_key).")
+    state: str = Field(description="Job state: Faulted, Stopped, etc.")
+    exception_message: str = Field(default="", description="Top-level exception message from Job.Info.")
+    exception_type: str = Field(
+        default="",
+        description=(
+            "Heuristically parsed exception class name — e.g. "
+            "SelectorNotFoundException, NullReferenceException, TimeoutException."
+        ),
+    )
+    started_at: datetime | None = Field(default=None, description="Job start timestamp.")
+    ended_at: datetime | None = Field(default=None, description="Job end timestamp.")
+    robot_logs: list[dict[str, Any]] = Field(
+        default_factory=list, description="Raw RobotLog OData records for this job."
+    )
+    xaml_files: dict[str, str] = Field(
+        default_factory=dict,
+        description="Relative-path → XAML content, extracted from the deployed .nupkg.",
+    )
+    screenshot_paths: list[str] = Field(
+        default_factory=list,
+        description="Orchestrator storage paths to screenshot artifacts, if any.",
+    )
+    folder: str = Field(default="Default", description="Orchestrator folder name.")
+
+
+class XamlPatch(BaseModel):
+    """A single in-place edit to a XAML file in a FailureBundle."""
+
+    file_path: str = Field(description="Relative path within the deployed package (e.g. Main.xaml).")
+    target_xpath: str = Field(description="lxml-style xpath of the element to edit.")
+    attribute: str = Field(description="Attribute name being rewritten (e.g. Selector).")
+    old_value: str = Field(description="Value before patching.")
+    new_value: str = Field(description="Value after patching.")
+    rationale: str = Field(default="", description="Specialist's reasoning for the change.")
+
+
+class FixCandidate(BaseModel):
+    """One specialist's proposed repair for a FailureBundle."""
+
+    specialist: str = Field(description="Name of the specialist agent (selector_repair, null, timing, business_rule).")
+    confidence: float = Field(ge=0.0, le=1.0, description="Specialist's self-assessed confidence.")
+    diagnosis_category: str = Field(description="DiagnosisResult.category value.")
+    patches: list[XamlPatch] = Field(default_factory=list, description="XAML edits this candidate proposes.")
+    reasoning: str = Field(default="", description="Human-readable justification.")
+    patched_xaml: dict[str, str] = Field(
+        default_factory=dict,
+        description="Path → patched XAML content, for downstream compilation + staging.",
+    )
+
+
+class StagingResult(BaseModel):
+    """Outcome of running a FixCandidate against the staging folder."""
+
+    candidate_specialist: str = Field(description="Specialist name whose patch was validated.")
+    success: bool = Field(description="Did the patched job complete successfully?")
+    job_id: str = Field(default="", description="Staging job key.")
+    duration_seconds: float = Field(default=0.0, description="Staging run wall-clock.")
+    message: str = Field(default="", description="Success message or failure excerpt.")
+    release_key: str = Field(default="", description="Staging release key used.")
+
+
 class LifecycleEvent(BaseModel):
     """An event in the lifecycle history."""
 
