@@ -87,20 +87,26 @@ def _resolve_fixer_pipeline(
 
     if swarm is not None:
         from rpa_architect.lifecycle.fix_proposal_fixer import FixProposalFixer
+        from rpa_architect.lifecycle.migrator_qa_fixer import MigratorQAFixer
         from rpa_architect.lifecycle.swarm_fault_fixer import SwarmFaultFixer
 
+        # Order: MigratorQAFixer first because its ``can_handle`` is mutex with
+        # SwarmFaultFixer's (xaml_files vs project_dir/main.py). FixProposalFixer
+        # remains the catch-all tail for anything neither claims.
         registry = FixerRegistry(
             [
+                MigratorQAFixer(),
                 SwarmFaultFixer(orchestrator=swarm),
                 FixProposalFixer(project_dir=str(swarm.repo_root)),
             ]
         )
         return registry, swarm.fetcher
 
-    # No-args default: catch-all only, bundle synthesized from state.
+    # No-args default: migrator fixer + catch-all, bundle synthesized from state.
     from rpa_architect.lifecycle.fix_proposal_fixer import FixProposalFixer
+    from rpa_architect.lifecycle.migrator_qa_fixer import MigratorQAFixer
 
-    return FixerRegistry([FixProposalFixer(project_dir="")]), None
+    return FixerRegistry([MigratorQAFixer(), FixProposalFixer(project_dir="")]), None
 
 
 def create_lifecycle_graph(
