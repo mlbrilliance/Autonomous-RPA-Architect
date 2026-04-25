@@ -348,6 +348,16 @@ class AuthoringOutputs(BaseModel):
         default="",
         description="Local project directory (caller-supplied or filled in by the codegen pipeline).",
     )
+    migrator_output_dir: str = Field(
+        default="",
+        description=(
+            "Directory holding a migrator-emitted Python+Playwright project. "
+            "When set, the lifecycle graph runs ``MigratorQALoop`` between "
+            "``validate_gate`` and ``deploy``. Empty (the default) means no "
+            "migrator output to QA — the graph passes through validate_gate "
+            "→ deploy unchanged, preserving pre-existing behavior."
+        ),
+    )
 
 
 class LifecycleState(BaseModel):
