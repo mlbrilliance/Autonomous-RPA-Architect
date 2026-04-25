@@ -9,8 +9,9 @@ from __future__ import annotations
 import re
 import xml.etree.ElementTree as ET
 
-from rpa_architect.xaml_lint._line_map import get_line_number as _get_line_number
+from rpa_architect.xaml_lint.lint_document import LintDocument
 from rpa_architect.xaml_lint.models import LintCategory, LintIssue, LintSeverity
+from rpa_architect.xaml_lint.rule import ContentKind, rule
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -52,16 +53,14 @@ def _local_name(tag: str) -> str:
     return tag
 
 
-# _get_line_number imported from _line_map
-
-
 def _is_expression(value: str) -> bool:
     """Return True if value looks like a VB.NET / C# expression rather than a literal."""
     stripped = value.strip()
     return (
         stripped.startswith("[")
         or stripped.startswith("{")
-        or "." in stripped and not stripped.startswith("http")
+        or "." in stripped
+        and not stripped.startswith("http")
         or stripped.startswith("New ")
         or "(" in stripped
     )
@@ -72,8 +71,17 @@ def _is_expression(value: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def lint_string_passwords(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-S001",
+    severity=LintSeverity.WARNING,
+    category=LintCategory.SECURITY,
+    applies_to=ContentKind.XAML,
+)
+def lint_string_passwords(doc: LintDocument) -> list[LintIssue]:
     """XL-S001: Flag variables/arguments with password-like names typed as String instead of SecureString."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     for elem in root.iter():
@@ -91,7 +99,11 @@ def lint_string_passwords(root: ET.Element, ns: dict[str, str]) -> list[LintIssu
                         break
 
             if _PASSWORD_PATTERNS.search(var_name):
-                if var_type and _SECURE_STRING_TYPE not in var_type and "SecureString" not in var_type:
+                if (
+                    var_type
+                    and _SECURE_STRING_TYPE not in var_type
+                    and "SecureString" not in var_type
+                ):
                     issues.append(
                         LintIssue(
                             rule_id="XL-S001",
@@ -102,7 +114,7 @@ def lint_string_passwords(root: ET.Element, ns: dict[str, str]) -> list[LintIssu
                                 f"but is typed as '{var_type}' instead of SecureString"
                             ),
                             element_name=var_name,
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 f"Change the type of '{var_name}' to System.Security.SecureString. "
                                 "Storing passwords as plain String keeps them in memory and makes them "
@@ -127,7 +139,7 @@ def lint_string_passwords(root: ET.Element, ns: dict[str, str]) -> list[LintIssu
                                 f"but is typed as '{arg_type}' instead of SecureString"
                             ),
                             element_name=arg_name,
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 f"Change the type of argument '{arg_name}' to "
                                 "InArgument<System.Security.SecureString> to protect sensitive data."
@@ -138,8 +150,17 @@ def lint_string_passwords(root: ET.Element, ns: dict[str, str]) -> list[LintIssu
     return issues
 
 
-def lint_credential_arguments(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-S002",
+    severity=LintSeverity.WARNING,
+    category=LintCategory.CREDENTIAL,
+    applies_to=ContentKind.XAML,
+)
+def lint_credential_arguments(doc: LintDocument) -> list[LintIssue]:
     """XL-S002: Flag credentials passed as workflow In arguments instead of using GetRobotCredential."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     # Collect argument names that look like credentials
@@ -174,7 +195,7 @@ def lint_credential_arguments(root: ET.Element, ns: dict[str, str]) -> list[Lint
                         "Use GetRobotCredential to retrieve credentials from Orchestrator instead."
                     ),
                     element_name=arg_name,
-                    line_number=_get_line_number(elem),
+                    line_number=doc.line_of(elem),
                     suggestion=(
                         "Remove the credential In argument and use a GetRobotCredential activity "
                         "to retrieve the credential from Orchestrator assets. This is more secure "
@@ -186,8 +207,17 @@ def lint_credential_arguments(root: ET.Element, ns: dict[str, str]) -> list[Lint
     return issues
 
 
-def lint_hardcoded_secrets(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-S003",
+    severity=LintSeverity.WARNING,
+    category=LintCategory.SECURITY,
+    applies_to=ContentKind.XAML,
+)
+def lint_hardcoded_secrets(doc: LintDocument) -> list[LintIssue]:
     """XL-S003: Flag likely hardcoded passwords, API keys, connection strings in XAML values."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
     seen_values: set[str] = set()
 
@@ -220,7 +250,7 @@ def lint_hardcoded_secrets(root: ET.Element, ns: dict[str, str]) -> list[LintIss
                                     f"on element '{local}'"
                                 ),
                                 element_name=local,
-                                line_number=_get_line_number(elem),
+                                line_number=doc.line_of(elem),
                                 suggestion=(
                                     "Never hardcode secrets in XAML. Use GetRobotCredential, "
                                     "GetRobotAsset, or Windows Credential Manager instead."
@@ -243,7 +273,11 @@ def lint_hardcoded_secrets(root: ET.Element, ns: dict[str, str]) -> list[LintIss
                     if len(matched) < 20:
                         continue
                     # Skip GUIDs
-                    if re.match(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", matched, re.I):
+                    if re.match(
+                        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+                        matched,
+                        re.I,
+                    ):
                         continue
                     # Skip things that look like XML namespace URIs
                     if matched.startswith("http"):
@@ -260,7 +294,7 @@ def lint_hardcoded_secrets(root: ET.Element, ns: dict[str, str]) -> list[LintIss
                                 f"'{matched[:20]}...'"
                             ),
                             element_name=local,
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 "Move secrets to Orchestrator Assets or Windows Credential Manager. "
                                 "Hardcoded secrets in XAML are visible in source control and logs."
@@ -272,8 +306,17 @@ def lint_hardcoded_secrets(root: ET.Element, ns: dict[str, str]) -> list[LintIss
     return issues
 
 
-def lint_plaintext_connection_strings(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-S004",
+    severity=LintSeverity.WARNING,
+    category=LintCategory.SECURITY,
+    applies_to=ContentKind.XAML,
+)
+def lint_plaintext_connection_strings(doc: LintDocument) -> list[LintIssue]:
     """XL-S004: Flag database connection strings with plaintext passwords."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     for elem in root.iter():
@@ -295,8 +338,15 @@ def lint_plaintext_connection_strings(root: ET.Element, ns: dict[str, str]) -> l
             # Look for connection string patterns with embedded passwords
             if _CONNECTION_STRING_PASSWORD_RE.search(value):
                 # Verify it looks like a connection string
-                conn_indicators = ["Server=", "Data Source=", "Initial Catalog=", "Database=",
-                                   "Provider=", "Driver=", "DSN="]
+                conn_indicators = [
+                    "Server=",
+                    "Data Source=",
+                    "Initial Catalog=",
+                    "Database=",
+                    "Provider=",
+                    "Driver=",
+                    "DSN=",
+                ]
                 if any(ind.lower() in value.lower() for ind in conn_indicators):
                     issues.append(
                         LintIssue(
@@ -308,7 +358,7 @@ def lint_plaintext_connection_strings(root: ET.Element, ns: dict[str, str]) -> l
                                 "contains a plaintext password"
                             ),
                             element_name=local,
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 "Store connection strings in Orchestrator Assets or Config.xlsx. "
                                 "Use Integrated Security=True where possible, or retrieve "
@@ -320,13 +370,5 @@ def lint_plaintext_connection_strings(root: ET.Element, ns: dict[str, str]) -> l
     return issues
 
 
-# ---------------------------------------------------------------------------
-# Exported rule list
-# ---------------------------------------------------------------------------
-
-ALL_SECURITY_RULES = [
-    lint_string_passwords,
-    lint_credential_arguments,
-    lint_hardcoded_secrets,
-    lint_plaintext_connection_strings,
-]
+# Rules are auto-registered by the @rule decorator. The legacy
+# ALL_SECURITY_RULES list has been removed.

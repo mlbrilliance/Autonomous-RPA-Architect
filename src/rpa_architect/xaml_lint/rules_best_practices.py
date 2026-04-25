@@ -10,8 +10,9 @@ from __future__ import annotations
 import re
 import xml.etree.ElementTree as ET
 
-from rpa_architect.xaml_lint._line_map import get_line_number as _get_line_number
+from rpa_architect.xaml_lint.lint_document import LintDocument
 from rpa_architect.xaml_lint.models import LintCategory, LintIssue, LintSeverity
+from rpa_architect.xaml_lint.rule import ContentKind, rule
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -77,9 +78,6 @@ def _local_name(tag: str) -> str:
     return tag
 
 
-# _get_line_number imported from _line_map
-
-
 def _is_expression(value: str) -> bool:
     stripped = value.strip()
     return stripped.startswith("[") or stripped.startswith("{")
@@ -93,7 +91,9 @@ def _has_activity(root: ET.Element, activity_name: str) -> bool:
     return False
 
 
-def _is_inside_activity(elem: ET.Element, parent_map: dict[ET.Element, ET.Element], activity_name: str) -> bool:
+def _is_inside_activity(
+    elem: ET.Element, parent_map: dict[ET.Element, ET.Element], activity_name: str
+) -> bool:
     """Check if elem is nested inside an activity of the given type."""
     current = elem
     while current in parent_map:
@@ -117,8 +117,17 @@ def _build_parent_map(root: ET.Element) -> dict[ET.Element, ET.Element]:
 # ---------------------------------------------------------------------------
 
 
-def lint_hardcoded_urls(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-B001",
+    severity=LintSeverity.INFO,
+    category=LintCategory.CONFIG,
+    applies_to=ContentKind.XAML,
+)
+def lint_hardcoded_urls(doc: LintDocument) -> list[LintIssue]:
     """XL-B001: Flag http:// or https:// URLs that should reference Config.xlsx."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
     seen_urls: set[str] = set()
 
@@ -153,10 +162,10 @@ def lint_hardcoded_urls(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]
                         category=LintCategory.CONFIG,
                         message=f"Hardcoded URL '{url[:80]}' should be stored in Config.xlsx or Orchestrator Assets",
                         element_name=local,
-                        line_number=_get_line_number(elem),
+                        line_number=doc.line_of(elem),
                         suggestion=(
                             "Move URLs to the Config.xlsx Settings sheet and reference them via "
-                            "in_Config(\"SettingName\"). Hardcoded URLs break when environments change."
+                            'in_Config("SettingName"). Hardcoded URLs break when environments change.'
                         ),
                     )
                 )
@@ -164,8 +173,17 @@ def lint_hardcoded_urls(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]
     return issues
 
 
-def lint_missing_log_messages(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-B002",
+    severity=LintSeverity.INFO,
+    category=LintCategory.BEST_PRACTICE,
+    applies_to=ContentKind.XAML,
+)
+def lint_missing_log_messages(doc: LintDocument) -> list[LintIssue]:
     """XL-B002: Warn if workflow has no LogMessage activities."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     if not _has_activity(root, "LogMessage"):
@@ -187,8 +205,17 @@ def lint_missing_log_messages(root: ET.Element, ns: dict[str, str]) -> list[Lint
     return issues
 
 
-def lint_missing_retry_scope(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-B003",
+    severity=LintSeverity.INFO,
+    category=LintCategory.BEST_PRACTICE,
+    applies_to=ContentKind.XAML,
+)
+def lint_missing_retry_scope(doc: LintDocument) -> list[LintIssue]:
     """XL-B003: Flag HttpClient/API calls not wrapped in RetryScope."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
     parent_map = _build_parent_map(root)
 
@@ -208,7 +235,7 @@ def lint_missing_retry_scope(root: ET.Element, ns: dict[str, str]) -> list[LintI
                             "in a RetryScope"
                         ),
                         element_name=local,
-                        line_number=_get_line_number(elem),
+                        line_number=doc.line_of(elem),
                         suggestion=(
                             "Wrap HTTP/API calls in a RetryScope to handle transient failures "
                             "(network timeouts, 503 errors, rate limits). Set NumberOfRetries=3 "
@@ -220,8 +247,17 @@ def lint_missing_retry_scope(root: ET.Element, ns: dict[str, str]) -> list[LintI
     return issues
 
 
-def lint_missing_try_catch(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-B004",
+    severity=LintSeverity.INFO,
+    category=LintCategory.BEST_PRACTICE,
+    applies_to=ContentKind.XAML,
+)
+def lint_missing_try_catch(doc: LintDocument) -> list[LintIssue]:
     """XL-B004: Flag top-level workflow without TryCatch."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     # Find the main workflow body (first Sequence or Flowchart under Activity)
@@ -253,7 +289,7 @@ def lint_missing_try_catch(root: ET.Element, ns: dict[str, str]) -> list[LintIss
                 category=LintCategory.BEST_PRACTICE,
                 message="Top-level workflow body does not contain a TryCatch",
                 element_name=_local_name(main_body.tag),
-                line_number=_get_line_number(main_body),
+                line_number=doc.line_of(main_body),
                 suggestion=(
                     "Wrap the main workflow logic in a TryCatch to handle unexpected errors. "
                     "The Catch block should log the error and optionally take a screenshot "
@@ -265,12 +301,21 @@ def lint_missing_try_catch(root: ET.Element, ns: dict[str, str]) -> list[LintIss
     return issues
 
 
-def lint_csharp_in_vbnet(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-B005",
+    severity=LintSeverity.INFO,
+    category=LintCategory.BEST_PRACTICE,
+    applies_to=ContentKind.XAML,
+)
+def lint_csharp_in_vbnet(doc: LintDocument) -> list[LintIssue]:
     """XL-B005: Detect C# syntax in VB.NET expression fields.
 
     UiPath projects can be either VB.NET or C#.  We check the root element
     for language indicators and then scan expressions accordingly.
     """
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     # Determine the project language
@@ -280,8 +325,12 @@ def lint_csharp_in_vbnet(root: ET.Element, ns: dict[str, str]) -> list[LintIssue
 
     for elem in root.iter():
         local = _local_name(elem.tag)
-        if local in ("VisualBasicSettings", "VisualBasicValue", "VisualBasicReference",
-                      "VisualBasicImport"):
+        if local in (
+            "VisualBasicSettings",
+            "VisualBasicValue",
+            "VisualBasicReference",
+            "VisualBasicImport",
+        ):
             has_vb = True
         elif local in ("CSharpValue", "CSharpReference"):
             has_csharp_project = True
@@ -331,11 +380,11 @@ def lint_csharp_in_vbnet(root: ET.Element, ns: dict[str, str]) -> list[LintIssue
                                 f"expression on '{local}.{source}': \"{expr[:60]}\""
                             ),
                             element_name=local,
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 "This project uses VB.NET expressions. Replace C# syntax: "
                                 "!= -> <>, && -> AndAlso, || -> OrElse, null -> Nothing, "
-                                "var -> Dim, // -> ', $\"\" -> String.Format()."
+                                'var -> Dim, // -> \', $"" -> String.Format().'
                             ),
                         )
                     )
@@ -344,8 +393,17 @@ def lint_csharp_in_vbnet(root: ET.Element, ns: dict[str, str]) -> list[LintIssue
     return issues
 
 
-def lint_placeholder_selectors(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-B006",
+    severity=LintSeverity.INFO,
+    category=LintCategory.BEST_PRACTICE,
+    applies_to=ContentKind.XAML,
+)
+def lint_placeholder_selectors(doc: LintDocument) -> list[LintIssue]:
     """XL-B006: Flag selectors containing TODO, PLACEHOLDER, or {{}} markers."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     for elem in root.iter():
@@ -383,7 +441,7 @@ def lint_placeholder_selectors(root: ET.Element, ns: dict[str, str]) -> list[Lin
                             f"on element '{local}'"
                         ),
                         element_name=local,
-                        line_number=_get_line_number(elem),
+                        line_number=doc.line_of(elem),
                         suggestion=(
                             "Replace placeholder selectors with actual UI selectors. "
                             "Use UiPath's Indicate on Screen or the Selector Builder to capture "
@@ -395,13 +453,27 @@ def lint_placeholder_selectors(root: ET.Element, ns: dict[str, str]) -> list[Lin
     return issues
 
 
-def lint_empty_catch_blocks(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-B007",
+    severity=LintSeverity.INFO,
+    category=LintCategory.BEST_PRACTICE,
+    applies_to=ContentKind.XAML,
+)
+def lint_empty_catch_blocks(doc: LintDocument) -> list[LintIssue]:
     """XL-B007: Flag TryCatch with empty Catch blocks (swallowed exceptions)."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     structural = {
-        "Variable", "Property", "Argument", "TextExpression",
-        "VisualBasicSettings", "VisualBasicValue", "VisualBasicReference",
+        "Variable",
+        "Property",
+        "Argument",
+        "TextExpression",
+        "VisualBasicSettings",
+        "VisualBasicValue",
+        "VisualBasicReference",
     }
 
     for elem in root.iter():
@@ -417,17 +489,20 @@ def lint_empty_catch_blocks(root: ET.Element, ns: dict[str, str]) -> list[LintIs
                 if child_local in ("ActivityAction", "Catch.Body"):
                     for inner in child:
                         inner_local = _local_name(inner.tag)
-                        if inner_local not in structural and not inner_local.startswith("DelegateInArgument"):
+                        if inner_local not in structural and not inner_local.startswith(
+                            "DelegateInArgument"
+                        ):
                             # Check if the inner element has children (actual activities)
                             inner_children = [
-                                c for c in inner
-                                if _local_name(c.tag) not in structural
+                                c for c in inner if _local_name(c.tag) not in structural
                             ]
                             if inner_children or inner_local not in ("Sequence",):
                                 has_activity = True
                                 break
                             # An empty Sequence still counts as empty
-                elif child_local not in structural and not child_local.startswith("DelegateInArgument"):
+                elif child_local not in structural and not child_local.startswith(
+                    "DelegateInArgument"
+                ):
                     has_activity = True
                     break
 
@@ -447,7 +522,7 @@ def lint_empty_catch_blocks(root: ET.Element, ns: dict[str, str]) -> list[LintIs
                         category=LintCategory.BEST_PRACTICE,
                         message=f"Empty Catch block for {exception_type} -- exception is swallowed silently",
                         element_name="Catch",
-                        line_number=_get_line_number(elem),
+                        line_number=doc.line_of(elem),
                         suggestion=(
                             "Add at least a LogMessage activity in the Catch block to record "
                             "the exception. Silently swallowing exceptions makes debugging "
@@ -459,8 +534,17 @@ def lint_empty_catch_blocks(root: ET.Element, ns: dict[str, str]) -> list[LintIs
     return issues
 
 
-def lint_magic_numbers(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-B008",
+    severity=LintSeverity.INFO,
+    category=LintCategory.CONFIG,
+    applies_to=ContentKind.XAML,
+)
+def lint_magic_numbers(doc: LintDocument) -> list[LintIssue]:
     """XL-B008: Flag numeric Delay/timeout values that should be Config-driven."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     for elem in root.iter():
@@ -479,10 +563,10 @@ def lint_magic_numbers(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                             category=LintCategory.CONFIG,
                             message=f"Hardcoded Delay duration '{duration}' should be Config-driven",
                             element_name=local,
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 "Store delay/timeout values in Config.xlsx and reference them as "
-                                "TimeSpan.FromSeconds(CDbl(in_Config(\"DelaySeconds\"))). "
+                                'TimeSpan.FromSeconds(CDbl(in_Config("DelaySeconds"))). '
                                 "Hardcoded delays make tuning difficult across environments."
                             ),
                         )
@@ -504,10 +588,10 @@ def lint_magic_numbers(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                                 "should be Config-driven"
                             ),
                             element_name=local,
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 "Store timeout values in Config.xlsx. Use "
-                                "CInt(in_Config(\"TimeoutMS\")) to reference them. "
+                                'CInt(in_Config("TimeoutMS")) to reference them. '
                                 "Different environments may need different timeout values."
                             ),
                         )
@@ -532,10 +616,10 @@ def lint_magic_numbers(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                                 "should be Config-driven"
                             ),
                             element_name=local,
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 f"Replace the literal {number} with a Config.xlsx reference. "
-                                "Example: TimeSpan.FromSeconds(CDbl(in_Config(\"WaitSeconds\")))."
+                                'Example: TimeSpan.FromSeconds(CDbl(in_Config("WaitSeconds"))).'
                             ),
                         )
                     )
@@ -565,14 +649,21 @@ _CLASSIC_TO_MODERN: dict[str, str] = {
 }
 
 
-def lint_deprecated_classic_activities(
-    root: ET.Element, ns: dict[str, str]
-) -> list[LintIssue]:
+@rule(
+    id="XL-BP009",
+    severity=LintSeverity.WARNING,
+    category=LintCategory.BEST_PRACTICE,
+    applies_to=ContentKind.XAML,
+)
+def lint_deprecated_classic_activities(doc: LintDocument) -> list[LintIssue]:
     """XL-BP009: Flag classic activities that have modern replacements.
 
     UiPath Studio 2025.10 strongly encourages Modern Design Experience
     activities (N-prefixed) over legacy classic activities.
     """
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
     seen: set[str] = set()
 
@@ -593,7 +684,7 @@ def lint_deprecated_classic_activities(
                         f"in Modern Design Experience"
                     ),
                     element_name=local,
-                    line_number=_get_line_number(elem),
+                    line_number=doc.line_of(elem),
                     suggestion=(
                         f"Use Modern activity '{modern}' instead of '{local}'. "
                         "Modern activities provide better reliability, unified targeting, "
@@ -609,14 +700,5 @@ def lint_deprecated_classic_activities(
 # Exported rule list
 # ---------------------------------------------------------------------------
 
-ALL_BEST_PRACTICE_RULES = [
-    lint_hardcoded_urls,
-    lint_missing_log_messages,
-    lint_missing_retry_scope,
-    lint_missing_try_catch,
-    lint_csharp_in_vbnet,
-    lint_placeholder_selectors,
-    lint_empty_catch_blocks,
-    lint_magic_numbers,
-    lint_deprecated_classic_activities,
-]
+# Rules are auto-registered by the @rule decorator. The legacy
+# ALL_BEST_PRACTICE_RULES list has been removed.

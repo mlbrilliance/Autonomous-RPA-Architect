@@ -3,10 +3,9 @@
 Validates NuGet version updates, UIAutomation rename, project.json schema,
 WaitScreenReady generator, and XL-BP009 deprecation lint rule.
 """
+
 from __future__ import annotations
 
-import json
-import xml.etree.ElementTree as ET
 
 import pytest
 
@@ -16,10 +15,8 @@ from rpa_architect.nuget.known_packages import (
     ACTIVITY_PACKAGE_MAP,
     DEFAULT_VERSIONS,
     STANDARD_PACKAGES,
-    _PACKAGE_ALIASES,
     get_default_version,
     get_package_for_activity,
-    get_required_packages,
     resolve_package_alias,
 )
 from rpa_architect.xaml_lint import lint_xaml, LintSeverity
@@ -36,8 +33,8 @@ def _reset_counter():
 # NuGet 25.10 Version Updates
 # ===================================================================
 
-class TestNuGet2510Versions:
 
+class TestNuGet2510Versions:
     def test_system_activities_version_is_25_10(self):
         assert DEFAULT_VERSIONS["UiPath.System.Activities"] == "25.10.0"
 
@@ -74,8 +71,8 @@ class TestNuGet2510Versions:
 # UIAutomationNext → UIAutomation Rename
 # ===================================================================
 
-class TestUIAutomationRename:
 
+class TestUIAutomationRename:
     def test_nclick_maps_to_uiautomation(self):
         assert get_package_for_activity("NClick") == "UiPath.UIAutomation.Activities"
 
@@ -86,9 +83,7 @@ class TestUIAutomationRename:
         n_activities = [k for k in ACTIVITY_PACKAGE_MAP if k.startswith("N")]
         for activity in n_activities:
             pkg = ACTIVITY_PACKAGE_MAP[activity]
-            assert pkg == "UiPath.UIAutomation.Activities", (
-                f"{activity} still maps to {pkg}"
-            )
+            assert pkg == "UiPath.UIAutomation.Activities", f"{activity} still maps to {pkg}"
 
     def test_standard_packages_use_uiautomation(self):
         assert "UiPath.UIAutomation.Activities" in STANDARD_PACKAGES
@@ -116,18 +111,21 @@ class TestUIAutomationRename:
 # project.json Schema Updates
 # ===================================================================
 
-class TestProjectJsonSchema:
 
+class TestProjectJsonSchema:
     def test_project_json_has_tool_version_25_10(self):
         from rpa_architect.assembler.project_json_gen import _PROJECT_JSON_TEMPLATE
+
         assert _PROJECT_JSON_TEMPLATE["toolVersion"] == "25.10.0"
 
     def test_project_json_has_studio_version_25_10(self):
         from rpa_architect.assembler.project_json_gen import _PROJECT_JSON_TEMPLATE
+
         assert _PROJECT_JSON_TEMPLATE["studioVersion"] == "25.10.0.0"
 
     def test_project_json_has_target_framework(self):
         from rpa_architect.assembler.project_json_gen import _PROJECT_JSON_TEMPLATE
+
         assert _PROJECT_JSON_TEMPLATE["targetFramework"] == "Portable"
 
     def test_project_json_has_main_field(self):
@@ -137,15 +135,18 @@ class TestProjectJsonSchema:
         Verified live against cloud.uipath.com in the Odoo build.
         """
         from rpa_architect.assembler.project_json_gen import _PROJECT_JSON_TEMPLATE
+
         assert "main" in _PROJECT_JSON_TEMPLATE
         assert _PROJECT_JSON_TEMPLATE["main"] == "Main.xaml"
 
     def test_project_json_runtime_has_net_version(self):
         from rpa_architect.assembler.project_json_gen import _PROJECT_JSON_TEMPLATE
+
         assert _PROJECT_JSON_TEMPLATE["runtimeOptions"]["netVersion"] == "net6.0"
 
     def test_default_dependencies_use_25_10_versions(self):
         from rpa_architect.assembler.project_json_gen import _DEFAULT_DEPENDENCIES
+
         for pkg, version_range in _DEFAULT_DEPENDENCIES.items():
             assert "25." in version_range or "2." in version_range or "3." in version_range, (
                 f"{pkg} dependency '{version_range}' doesn't use 25.10 era version"
@@ -156,6 +157,7 @@ class TestProjectJsonSchema:
         # from defaults because Portable runtime can't load it. The
         # CodedWorkflow handles all logic via HttpClient.
         from rpa_architect.assembler.project_json_gen import _DEFAULT_DEPENDENCIES
+
         assert "UiPath.UIAutomation.Activities" not in _DEFAULT_DEPENDENCIES
         assert "UiPath.System.Activities" in _DEFAULT_DEPENDENCIES
         assert "UiPath.WebAPI.Activities" in _DEFAULT_DEPENDENCIES
@@ -165,10 +167,12 @@ class TestProjectJsonSchema:
         # 1=Production). String "Development" is rejected by the
         # WorkflowCompiler — verified live in Phase E.
         from rpa_architect.assembler.project_json_gen import _PROJECT_JSON_TEMPLATE
+
         assert _PROJECT_JSON_TEMPLATE["designOptions"]["projectProfile"] == 0
 
     def test_xaml_namespaces_use_mscorlib(self):
         from rpa_architect.generators.base import _XAML_NAMESPACES
+
         scg = _XAML_NAMESPACES["xmlns:scg"]
         sco = _XAML_NAMESPACES["xmlns:sco"]
         assert "mscorlib" in scg, f"scg uses wrong assembly: {scg}"
@@ -176,10 +180,12 @@ class TestProjectJsonSchema:
 
     def test_wiring_namespace_uses_mscorlib(self):
         from rpa_architect.wiring.wiring_engine import _NS
+
         assert "mscorlib" in _NS["scg"]
 
     def test_variable_injector_namespace_uses_mscorlib(self):
         from rpa_architect.wiring.variable_injector import _NS
+
         assert "mscorlib" in _NS["scg"]
 
 
@@ -187,8 +193,8 @@ class TestProjectJsonSchema:
 # WaitScreenReady Generator
 # ===================================================================
 
-class TestWaitScreenReadyGenerator:
 
+class TestWaitScreenReadyGenerator:
     def test_generator_registered(self):
         info = get_generator("wait_screen_ready")
         assert info is not None
@@ -230,8 +236,8 @@ class TestWaitScreenReadyGenerator:
 # XL-BP009: Deprecated Classic Activities Lint Rule
 # ===================================================================
 
-class TestDeprecatedClassicActivitiesLint:
 
+class TestDeprecatedClassicActivitiesLint:
     def _make_xaml(self, body: str) -> str:
         return (
             '<?xml version="1.0" encoding="utf-8"?>\n'
@@ -240,9 +246,9 @@ class TestDeprecatedClassicActivitiesLint:
             ' xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"'
             ' xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation">\n'
             '  <Sequence DisplayName="Main">\n'
-            f'    {body}\n'
-            '  </Sequence>\n'
-            '</Activity>'
+            f"    {body}\n"
+            "  </Sequence>\n"
+            "</Activity>"
         )
 
     def test_detects_classic_click(self):
@@ -279,15 +285,14 @@ class TestDeprecatedClassicActivitiesLint:
         assert len(bp009) == 0
 
     def test_severity_is_warning(self):
-        xaml = self._make_xaml('<Click />')
+        xaml = self._make_xaml("<Click />")
         issues = lint_xaml(xaml)
         bp009 = [i for i in issues if i.rule_id == "XL-BP009"]
         assert bp009[0].severity == LintSeverity.WARNING
 
     def test_no_duplicate_for_same_classic_type(self):
         xaml = self._make_xaml(
-            '<Click DisplayName="Click A" />\n'
-            '    <Click DisplayName="Click B" />'
+            '<Click DisplayName="Click A" />\n    <Click DisplayName="Click B" />'
         )
         issues = lint_xaml(xaml)
         bp009 = [i for i in issues if i.rule_id == "XL-BP009"]
@@ -304,8 +309,17 @@ class TestDeprecatedClassicActivitiesLint:
         bp009 = [i for i in issues if i.rule_id == "XL-BP009"]
         assert len(bp009) == 0
 
-    def test_lint_engine_has_21_rules(self):
-        """The default engine should now have 21 rules (20 original + BP009)."""
+    def test_lint_engine_has_all_builtin_rules(self):
+        """The default engine should expose every decorator-registered rule.
+
+        21 XAML rules (8 hallucination + 4 security + 9 best-practice) +
+        4 coded-workflow rules — coded rules joined the same registry
+        when the LintDocument seam landed.
+        """
         from rpa_architect.xaml_lint.engine import create_default_engine
+        from rpa_architect.xaml_lint.rule import ContentKind, rules_for
+
         engine = create_default_engine()
-        assert engine.rule_count == 21
+        assert engine.rule_count == 25
+        assert len(rules_for(ContentKind.XAML)) == 21
+        assert len(rules_for(ContentKind.CODED)) == 4
