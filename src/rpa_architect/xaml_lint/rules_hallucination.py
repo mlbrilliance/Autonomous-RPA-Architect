@@ -12,13 +12,14 @@ import re
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
-from rpa_architect.xaml_lint._line_map import get_line_number as _get_line_number
 from rpa_architect.xaml_lint.known_activities import (
     VALID_ACTIVITIES,
     VALID_ENUMS,
     VALID_PROPERTIES,
 )
+from rpa_architect.xaml_lint.lint_document import LintDocument
 from rpa_architect.xaml_lint.models import LintCategory, LintIssue, LintSeverity
+from rpa_architect.xaml_lint.rule import ContentKind, rule
 
 if TYPE_CHECKING:
     pass
@@ -73,25 +74,66 @@ _PROPERTY_ACCESSOR_RE = re.compile(r"^[A-Z]\w+\.\w+$")
 # Valid .NET primitive types and common UiPath types for TypeArgument validation
 _VALID_DOTNET_TYPES = {
     # Primitives
-    "x:String", "x:Int32", "x:Int64", "x:Boolean", "x:Double", "x:Decimal",
-    "x:Object", "x:Byte", "x:Char", "x:Single", "x:Int16", "x:UInt16",
-    "x:UInt32", "x:UInt64", "x:DateTime", "x:TimeSpan", "x:Guid",
+    "x:String",
+    "x:Int32",
+    "x:Int64",
+    "x:Boolean",
+    "x:Double",
+    "x:Decimal",
+    "x:Object",
+    "x:Byte",
+    "x:Char",
+    "x:Single",
+    "x:Int16",
+    "x:UInt16",
+    "x:UInt32",
+    "x:UInt64",
+    "x:DateTime",
+    "x:TimeSpan",
+    "x:Guid",
     # System types (no prefix)
-    "String", "Int32", "Int64", "Boolean", "Double", "Decimal",
-    "Object", "Byte", "Char", "Single", "DateTime", "TimeSpan", "Guid",
+    "String",
+    "Int32",
+    "Int64",
+    "Boolean",
+    "Double",
+    "Decimal",
+    "Object",
+    "Byte",
+    "Char",
+    "Single",
+    "DateTime",
+    "TimeSpan",
+    "Guid",
     # Common complex types
-    "DataTable", "DataRow", "DataColumn",
-    "System.Data.DataTable", "System.Data.DataRow", "System.Data.DataColumn",
-    "System.String", "System.Int32", "System.Int64", "System.Boolean",
-    "System.Double", "System.Decimal", "System.Object", "System.DateTime",
-    "System.TimeSpan", "System.Guid",
+    "DataTable",
+    "DataRow",
+    "DataColumn",
+    "System.Data.DataTable",
+    "System.Data.DataRow",
+    "System.Data.DataColumn",
+    "System.String",
+    "System.Int32",
+    "System.Int64",
+    "System.Boolean",
+    "System.Double",
+    "System.Decimal",
+    "System.Object",
+    "System.DateTime",
+    "System.TimeSpan",
+    "System.Guid",
     "System.Net.Mail.MailMessage",
-    "System.IO.DirectoryInfo", "System.IO.FileInfo",
+    "System.IO.DirectoryInfo",
+    "System.IO.FileInfo",
     "System.Collections.Generic.KeyValuePair",
-    "System.Exception", "System.ApplicationException",
+    "System.Exception",
+    "System.ApplicationException",
     "System.Text.RegularExpressions.Match",
-    "JObject", "JArray", "JToken",
-    "Newtonsoft.Json.Linq.JObject", "Newtonsoft.Json.Linq.JArray",
+    "JObject",
+    "JArray",
+    "JToken",
+    "Newtonsoft.Json.Linq.JObject",
+    "Newtonsoft.Json.Linq.JArray",
     "Newtonsoft.Json.Linq.JToken",
     "UiPath.Core.QueueItem",
     "ui:QueueItem",
@@ -122,15 +164,22 @@ def _strip_generic(type_str: str) -> list[str]:
     return [p.strip() for p in parts if p.strip()]
 
 
-
-
 # ---------------------------------------------------------------------------
 # Rules
 # ---------------------------------------------------------------------------
 
 
-def lint_unknown_activities(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-H001",
+    severity=LintSeverity.ERROR,
+    category=LintCategory.HALLUCINATION,
+    applies_to=ContentKind.XAML,
+)
+def lint_unknown_activities(doc: LintDocument) -> list[LintIssue]:
     """XL-H001: Flag activity element names not in the known activity registry."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     for elem in root.iter():
@@ -159,7 +208,7 @@ def lint_unknown_activities(root: ET.Element, ns: dict[str, str]) -> list[LintIs
                     category=LintCategory.HALLUCINATION,
                     message=f"Unknown activity '{base_name}' is not a recognized UiPath activity",
                     element_name=base_name,
-                    line_number=_get_line_number(elem),
+                    line_number=doc.line_of(elem),
                     suggestion=(
                         f"Check if '{base_name}' is a valid UiPath activity name. "
                         "Common LLM mistakes include inventing activities like "
@@ -172,8 +221,17 @@ def lint_unknown_activities(root: ET.Element, ns: dict[str, str]) -> list[LintIs
     return issues
 
 
-def lint_missing_namespaces(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-H002",
+    severity=LintSeverity.ERROR,
+    category=LintCategory.NAMESPACE,
+    applies_to=ContentKind.XAML,
+)
+def lint_missing_namespaces(doc: LintDocument) -> list[LintIssue]:
     """XL-H002: Check that all xmlns prefixes used in element tags are declared."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
     declared_prefixes: set[str] = set()
 
@@ -204,8 +262,22 @@ def lint_missing_namespaces(root: ET.Element, ns: dict[str, str]) -> list[LintIs
                 # Strip generic wrappers like "scg:List(x:String)"
                 prefix = re.split(r"[(\[,\s]", prefix)[0]
                 # Common known valid prefixes
-                if prefix in ("x", "scg", "sco", "local", "mca", "sap2010", "mc", "p", "s",
-                             "ui", "sd", "InArgument", "OutArgument", "InOutArgument"):
+                if prefix in (
+                    "x",
+                    "scg",
+                    "sco",
+                    "local",
+                    "mca",
+                    "sap2010",
+                    "mc",
+                    "p",
+                    "s",
+                    "ui",
+                    "sd",
+                    "InArgument",
+                    "OutArgument",
+                    "InOutArgument",
+                ):
                     continue
                 if prefix in declared_prefixes:
                     continue
@@ -219,7 +291,7 @@ def lint_missing_namespaces(root: ET.Element, ns: dict[str, str]) -> list[LintIs
                             category=LintCategory.NAMESPACE,
                             message=f"Namespace prefix '{prefix}' is used but not declared in xmlns attributes",
                             element_name=_local_name(elem.tag),
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 f"Add xmlns:{prefix}='...' declaration to the root Activity element. "
                                 "LLMs often invent namespace prefixes without declaring them."
@@ -230,8 +302,17 @@ def lint_missing_namespaces(root: ET.Element, ns: dict[str, str]) -> list[LintIs
     return issues
 
 
-def lint_invalid_enum_values(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-H003",
+    severity=LintSeverity.ERROR,
+    category=LintCategory.ENUM,
+    applies_to=ContentKind.XAML,
+)
+def lint_invalid_enum_values(doc: LintDocument) -> list[LintIssue]:
     """XL-H003: Check property values against VALID_ENUMS."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     for elem in root.iter():
@@ -257,7 +338,7 @@ def lint_invalid_enum_values(root: ET.Element, ns: dict[str, str]) -> list[LintI
                                 f"Valid values: {sorted(valid_values)}"
                             ),
                             element_name=_local_name(elem.tag),
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion=(
                                 f"Use one of the valid values for '{clean_attr}': "
                                 f"{', '.join(sorted(valid_values))}. "
@@ -289,7 +370,7 @@ def lint_invalid_enum_values(root: ET.Element, ns: dict[str, str]) -> list[LintI
                                     f"Valid values: {sorted(valid_values)}"
                                 ),
                                 element_name=_local_name(elem.tag),
-                                line_number=_get_line_number(child),
+                                line_number=doc.line_of(child),
                                 suggestion=(
                                     f"Use one of the valid values for '{prop_name}': "
                                     f"{', '.join(sorted(valid_values))}."
@@ -300,7 +381,13 @@ def lint_invalid_enum_values(root: ET.Element, ns: dict[str, str]) -> list[LintI
     return issues
 
 
-def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-H004",
+    severity=LintSeverity.ERROR,
+    category=LintCategory.NESTING,
+    applies_to=ContentKind.XAML,
+)
+def lint_wrong_nesting(doc: LintDocument) -> list[LintIssue]:
     """XL-H004: Validate parent-child nesting relationships.
 
     Checks:
@@ -310,6 +397,9 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
     - Switch cases must contain activities
     - Sequence children should only be activities
     """
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     for elem in root.iter():
@@ -323,7 +413,8 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                 if child_local == "If.Then":
                     then_found = True
                     activity_children = [
-                        c for c in child
+                        c
+                        for c in child
                         if not _local_name(c.tag).startswith("If.")
                         and _local_name(c.tag) not in _STRUCTURAL_TAGS
                     ]
@@ -335,7 +426,7 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                                 category=LintCategory.NESTING,
                                 message="If.Then block is empty -- must contain exactly one activity",
                                 element_name="If",
-                                line_number=_get_line_number(child),
+                                line_number=doc.line_of(child),
                                 suggestion="Add an activity inside the If.Then block. Use a Sequence to nest multiple activities.",
                             )
                         )
@@ -350,7 +441,7 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                                     "contain exactly one. Wrap in a Sequence."
                                 ),
                                 element_name="If",
-                                line_number=_get_line_number(child),
+                                line_number=doc.line_of(child),
                                 suggestion="Wrap multiple activities in a <Sequence> inside the If.Then block.",
                             )
                         )
@@ -359,7 +450,8 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                 # If might use direct child elements in some XAML styles, so
                 # only flag if the If element has children at all
                 direct_children = [
-                    c for c in elem
+                    c
+                    for c in elem
                     if _local_name(c.tag) not in _STRUCTURAL_TAGS
                     and not _PROPERTY_ACCESSOR_RE.match(_local_name(c.tag))
                 ]
@@ -371,28 +463,26 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                             category=LintCategory.NESTING,
                             message="If activity is missing If.Then block",
                             element_name="If",
-                            line_number=_get_line_number(elem),
+                            line_number=doc.line_of(elem),
                             suggestion="Add an <If.Then> child element containing the activity to execute when condition is true.",
                         )
                     )
 
         # ── ForEach / ParallelForEach body checks ─────────────────────
         elif local in ("ForEach", "ParallelForEach"):
-            body_found = False
             for child in elem:
                 child_local = _local_name(child.tag)
                 if child_local in (f"{local}.Body", "ActivityAction"):
-                    body_found = True
                     # Body should ideally contain a Sequence
                     inner_activities = [
-                        c for c in child
+                        c
+                        for c in child
                         if _local_name(c.tag) not in _STRUCTURAL_TAGS
                         and not _PROPERTY_ACCESSOR_RE.match(_local_name(c.tag))
                     ]
                     # Check if there's a Sequence or if direct children exist
                     has_sequence = any(
-                        _local_name(c.tag) in ("Sequence", "ActivityAction")
-                        for c in child
+                        _local_name(c.tag) in ("Sequence", "ActivityAction") for c in child
                     )
                     if not has_sequence and len(inner_activities) > 1:
                         issues.append(
@@ -405,7 +495,7 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                                     "a wrapping Sequence"
                                 ),
                                 element_name=local,
-                                line_number=_get_line_number(child),
+                                line_number=doc.line_of(child),
                                 suggestion=f"Wrap the contents of {local}.Body in a <Sequence> element.",
                             )
                         )
@@ -418,10 +508,7 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                 child_local = _local_name(child.tag)
                 if child_local == "TryCatch.Try":
                     has_try = True
-                    inner = [
-                        c for c in child
-                        if _local_name(c.tag) not in _STRUCTURAL_TAGS
-                    ]
+                    inner = [c for c in child if _local_name(c.tag) not in _STRUCTURAL_TAGS]
                     if not inner:
                         issues.append(
                             LintIssue(
@@ -430,7 +517,7 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                                 category=LintCategory.NESTING,
                                 message="TryCatch.Try block is empty",
                                 element_name="TryCatch",
-                                line_number=_get_line_number(child),
+                                line_number=doc.line_of(child),
                                 suggestion="Add activities inside the TryCatch.Try block.",
                             )
                         )
@@ -445,7 +532,7 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                         category=LintCategory.NESTING,
                         message="TryCatch is missing the TryCatch.Try block",
                         element_name="TryCatch",
-                        line_number=_get_line_number(elem),
+                        line_number=doc.line_of(elem),
                         suggestion="Add a <TryCatch.Try> child element with the activity to attempt.",
                     )
                 )
@@ -458,7 +545,7 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
                         category=LintCategory.NESTING,
                         message="TryCatch is missing TryCatch.Catches block",
                         element_name="TryCatch",
-                        line_number=_get_line_number(elem),
+                        line_number=doc.line_of(elem),
                         suggestion="Add a <TryCatch.Catches> block with at least one <Catch> element.",
                     )
                 )
@@ -466,14 +553,27 @@ def lint_wrong_nesting(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
     return issues
 
 
-def lint_nonexistent_properties(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-H005",
+    severity=LintSeverity.ERROR,
+    category=LintCategory.PROPERTY,
+    applies_to=ContentKind.XAML,
+)
+def lint_nonexistent_properties(doc: LintDocument) -> list[LintIssue]:
     """XL-H005: Check element attributes against VALID_PROPERTIES for known activities."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     # Attributes to always skip (framework-level, not activity properties)
     _skip_attrs = {
-        "xmlns", "x:Class", "x:Name", "x:Key",
-        "mc:Ignorable", "TextExpression.NamespacesForImplementation",
+        "xmlns",
+        "x:Class",
+        "x:Name",
+        "x:Key",
+        "mc:Ignorable",
+        "TextExpression.NamespacesForImplementation",
         "TextExpression.ReferencesForImplementation",
     }
 
@@ -503,11 +603,9 @@ def lint_nonexistent_properties(root: ET.Element, ns: dict[str, str]) -> list[Li
                         rule_id="XL-H005",
                         severity=LintSeverity.ERROR,
                         category=LintCategory.PROPERTY,
-                        message=(
-                            f"Property '{clean_attr}' does not exist on activity '{local}'"
-                        ),
+                        message=(f"Property '{clean_attr}' does not exist on activity '{local}'"),
                         element_name=local,
-                        line_number=_get_line_number(elem),
+                        line_number=doc.line_of(elem),
                         suggestion=(
                             f"Valid properties for '{local}' include: "
                             f"{', '.join(sorted(valid_props))}. "
@@ -520,8 +618,17 @@ def lint_nonexistent_properties(root: ET.Element, ns: dict[str, str]) -> list[Li
     return issues
 
 
-def lint_broken_viewstate(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-H006",
+    severity=LintSeverity.ERROR,
+    category=LintCategory.VIEWSTATE,
+    applies_to=ContentKind.XAML,
+)
+def lint_broken_viewstate(doc: LintDocument) -> list[LintIssue]:
     """XL-H006: Verify ViewState references match actual activity DisplayNames/IdRefs."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     # Collect all IdRef values from activities
@@ -556,9 +663,7 @@ def lint_broken_viewstate(root: ET.Element, ns: dict[str, str]) -> list[LintIssu
                     rule_id="XL-H006",
                     severity=LintSeverity.ERROR,
                     category=LintCategory.VIEWSTATE,
-                    message=(
-                        f"ViewState references IdRef '{ref}' but no activity has this IdRef"
-                    ),
+                    message=(f"ViewState references IdRef '{ref}' but no activity has this IdRef"),
                     element_name="ViewStateData",
                     suggestion=(
                         f"Ensure activity with sap2010:WorkflowViewState.IdRef='{ref}' exists, "
@@ -571,8 +676,17 @@ def lint_broken_viewstate(root: ET.Element, ns: dict[str, str]) -> list[LintIssu
     return issues
 
 
-def lint_invalid_type_arguments(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-H007",
+    severity=LintSeverity.ERROR,
+    category=LintCategory.TYPE_ARGUMENT,
+    applies_to=ContentKind.XAML,
+)
+def lint_invalid_type_arguments(doc: LintDocument) -> list[LintIssue]:
     """XL-H007: Validate TypeArgument attribute values are valid .NET types."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     for elem in root.iter():
@@ -622,7 +736,7 @@ def lint_invalid_type_arguments(root: ET.Element, ns: dict[str, str]) -> list[Li
                     category=LintCategory.TYPE_ARGUMENT,
                     message=f"Potentially invalid TypeArgument value '{t}' in element '{_local_name(elem.tag)}'",
                     element_name=_local_name(elem.tag),
-                    line_number=_get_line_number(elem),
+                    line_number=doc.line_of(elem),
                     suggestion=(
                         "Use valid .NET type names: x:String, x:Int32, x:Boolean, x:Object, "
                         "DataTable, DataRow, System.Data.DataTable, etc. "
@@ -635,8 +749,17 @@ def lint_invalid_type_arguments(root: ET.Element, ns: dict[str, str]) -> list[Li
     return issues
 
 
-def lint_duplicate_display_names(root: ET.Element, ns: dict[str, str]) -> list[LintIssue]:
+@rule(
+    id="XL-H008",
+    severity=LintSeverity.ERROR,
+    category=LintCategory.HALLUCINATION,
+    applies_to=ContentKind.XAML,
+)
+def lint_duplicate_display_names(doc: LintDocument) -> list[LintIssue]:
     """XL-H008: Flag duplicate DisplayName values within the same scope."""
+    root = doc.tree
+    if root is None:
+        return []
     issues: list[LintIssue] = []
 
     def _check_scope(scope_elem: ET.Element) -> None:
@@ -671,7 +794,7 @@ def lint_duplicate_display_names(root: ET.Element, ns: dict[str, str]) -> list[L
                                 f"(activity: {_local_name(e.tag)})"
                             ),
                             element_name=_local_name(e.tag),
-                            line_number=_get_line_number(e),
+                            line_number=doc.line_of(e),
                             suggestion=(
                                 f"Rename one of the activities with DisplayName '{dn}' "
                                 "to avoid confusion. Each activity in a scope should have "
@@ -684,17 +807,5 @@ def lint_duplicate_display_names(root: ET.Element, ns: dict[str, str]) -> list[L
     return issues
 
 
-# ---------------------------------------------------------------------------
-# Exported rule list
-# ---------------------------------------------------------------------------
-
-ALL_HALLUCINATION_RULES = [
-    lint_unknown_activities,
-    lint_missing_namespaces,
-    lint_invalid_enum_values,
-    lint_wrong_nesting,
-    lint_nonexistent_properties,
-    lint_broken_viewstate,
-    lint_invalid_type_arguments,
-    lint_duplicate_display_names,
-]
+# Rules are auto-registered by the @rule decorator. The legacy
+# ALL_HALLUCINATION_RULES list has been removed.

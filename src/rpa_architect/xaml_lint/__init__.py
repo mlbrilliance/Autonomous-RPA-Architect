@@ -4,58 +4,54 @@ Public API
 ----------
 - ``lint_xaml(content)`` -- lint a single XAML string
 - ``lint_project(project_dir)`` -- lint all XAML files in a project directory
+
+Extension API
+-------------
+- ``@rule(...)`` decorator from :mod:`rpa_architect.xaml_lint.rule`
+- :class:`LintDocument` from :mod:`rpa_architect.xaml_lint.lint_document`
+- :class:`ContentKind` for ``applies_to`` (XAML or CODED)
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from rpa_architect.xaml_lint.engine import LintEngine, create_default_engine
+from rpa_architect.xaml_lint.engine import (
+    LintEngine,
+    get_default_engine,
+)
+from rpa_architect.xaml_lint.lint_document import LintDocument
 from rpa_architect.xaml_lint.models import (
     LintCategory,
     LintIssue,
     LintResult,
     LintSeverity,
 )
+from rpa_architect.xaml_lint.rule import ContentKind, Rule, rule
 
 __all__ = [
+    "ContentKind",
     "LintCategory",
+    "LintDocument",
     "LintEngine",
     "LintIssue",
     "LintResult",
     "LintSeverity",
+    "Rule",
     "lint_project",
     "lint_xaml",
+    "rule",
 ]
-
-# Module-level default engine (lazy singleton)
-_default_engine: LintEngine | None = None
-
-
-def _get_engine() -> LintEngine:
-    global _default_engine  # noqa: PLW0603
-    if _default_engine is None:
-        _default_engine = create_default_engine()
-    return _default_engine
 
 
 def lint_xaml(content: str) -> list[LintIssue]:
     """Lint a single XAML string and return all detected issues.
 
-    Parameters
-    ----------
-    content:
-        Raw XAML content as a string.
-
-    Returns
-    -------
-    list[LintIssue]
-        All lint issues found, sorted by severity (ERROR first) then rule_id.
+    Returns issues sorted by severity (ERROR first), then rule_id, then line.
     """
-    engine = _get_engine()
+    engine = get_default_engine()
     issues = engine.run(content)
 
-    # Sort: errors first, then warnings, then info
     severity_order = {LintSeverity.ERROR: 0, LintSeverity.WARNING: 1, LintSeverity.INFO: 2}
     issues.sort(key=lambda i: (severity_order.get(i.severity, 3), i.rule_id, i.line_number))
 
@@ -63,20 +59,7 @@ def lint_xaml(content: str) -> list[LintIssue]:
 
 
 def lint_project(project_dir: Path) -> list[LintResult]:
-    """Lint all XAML files in a UiPath project directory.
-
-    Parameters
-    ----------
-    project_dir:
-        Path to the UiPath project root directory.  All ``*.xaml`` files
-        found recursively will be linted.
-
-    Returns
-    -------
-    list[LintResult]
-        One ``LintResult`` per XAML file, including the file path and all
-        issues found.
-    """
+    """Lint all XAML files in a UiPath project directory."""
     project_dir = Path(project_dir)
     results: list[LintResult] = []
 
@@ -137,11 +120,6 @@ def lint_project(project_dir: Path) -> list[LintResult]:
             continue
 
         issues = lint_xaml(content)
-        results.append(
-            LintResult(
-                file_path=str(xaml_path),
-                issues=issues,
-            )
-        )
+        results.append(LintResult(file_path=str(xaml_path), issues=issues))
 
     return results

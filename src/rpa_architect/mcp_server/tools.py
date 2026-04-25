@@ -145,7 +145,9 @@ async def generate_from_ir(
 
         # Always generate the REFramework project (core output).
         manifest = await assemble_project(
-            ir, {}, out_path,
+            ir,
+            {},
+            out_path,
             harvest_config=harvest_config,
         )
         generated_files.extend(manifest.files_written)
@@ -309,7 +311,11 @@ async def generate_selectors(
     """
     path = Path(screenshots_dir)
     if not path.is_dir():
-        return {"success": False, "selectors": {}, "errors": [f"Not a directory: {screenshots_dir}"]}
+        return {
+            "success": False,
+            "selectors": {},
+            "errors": [f"Not a directory: {screenshots_dir}"],
+        }
 
     try:
         ir = ProcessIR.model_validate_json(ir_json)
@@ -346,7 +352,11 @@ async def build_knowledge(knowledge_dir: str) -> dict[str, Any]:
     """
     path = Path(knowledge_dir)
     if not path.is_dir():
-        return {"success": False, "documents_indexed": 0, "errors": [f"Not a directory: {knowledge_dir}"]}
+        return {
+            "success": False,
+            "documents_indexed": 0,
+            "errors": [f"Not a directory: {knowledge_dir}"],
+        }
 
     errors: list[str] = []
     doc_count = 0
@@ -552,7 +562,11 @@ async def lifecycle_run(
     """
     try:
         from rpa_architect.lifecycle.agent import create_lifecycle_graph
-        from rpa_architect.lifecycle.state import LifecycleRequest, LifecycleState
+        from rpa_architect.lifecycle.state import (
+            AuthoringOutputs,
+            LifecycleRequest,
+            LifecycleState,
+        )
 
         request = LifecycleRequest(
             source=source,
@@ -564,7 +578,7 @@ async def lifecycle_run(
 
         initial_state = LifecycleState(
             request=request,
-            project_dir=output_dir,
+            authoring=AuthoringOutputs(project_dir=output_dir),
         )
 
         graph = create_lifecycle_graph()
@@ -858,9 +872,7 @@ async def verify_package_contents(nupkg_path: str) -> dict[str, Any]:
                 )
                 _check("dll_nonzero_size", len(dll_bytes) > 0, f"{len(dll_bytes)} bytes")
 
-            main_xaml_member = next(
-                (n for n in names if n.endswith("content/Main.xaml")), None
-            )
+            main_xaml_member = next((n for n in names if n.endswith("content/Main.xaml")), None)
             _check("has_main_xaml", main_xaml_member is not None)
 
             if main_xaml_member:
@@ -914,7 +926,7 @@ async def get_community_cloud_gotchas() -> dict[str, Any]:
         {
             "id": 3,
             "title": "DU Cloud API v2 needs extra OAuth scopes",
-            "symptom": "Token endpoint returns {\"error\":\"invalid_scope\"}",
+            "symptom": 'Token endpoint returns {"error":"invalid_scope"}',
             "workaround": "Register Du.Digitization.Api + Du.Extraction.Api + Du.Classification.Api + Du.Validation.Api on the external app",
             "status": "config_required",
         },

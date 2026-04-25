@@ -58,9 +58,7 @@ class FetcherLike(Protocol):
 
 
 class StagerLike(Protocol):
-    async def validate(
-        self, bundle: FailureBundle, candidate: FixCandidate
-    ) -> StagingResult: ...
+    async def validate(self, bundle: FailureBundle, candidate: FixCandidate) -> StagingResult: ...
 
 
 class PROpenerLike(Protocol):
@@ -101,6 +99,9 @@ class SwarmOrchestrator:
 
     async def heal(self, *, job_id: str) -> SwarmVerdict:
         bundle = await self.fetcher.fetch(job_id)
+        return await self.heal_bundle(bundle)
+
+    async def heal_bundle(self, bundle: FailureBundle) -> SwarmVerdict:
         logger.info(
             "swarm: healing job=%s state=%s exception=%s",
             bundle.job_id,
@@ -109,9 +110,7 @@ class SwarmOrchestrator:
         )
 
         xaml_docs = _parse_all(bundle.xaml_files)
-        candidates = await _gather_candidates(
-            self.specialists, bundle, xaml_docs, self.target_url
-        )
+        candidates = await _gather_candidates(self.specialists, bundle, xaml_docs, self.target_url)
         verdict = Arbiter().arbitrate(candidates)
 
         if verdict.winner is None or not verdict.winner.patches:
