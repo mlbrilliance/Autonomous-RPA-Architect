@@ -112,6 +112,61 @@ async def validate_gate_node(state: LifecycleState) -> LifecycleState:
     return state
 
 
+async def qa_run_node(state: LifecycleState) -> LifecycleState:
+    """Run the browser QA-loop against a migrator-emitted Playwright project.
+
+    No-op when ``state.authoring.migrator_output_dir`` is empty so the
+    pre-existing graph topology (validate_gate → deploy) is preserved for
+    callers that don't go through the migrator.
+
+    On failure, populates ``state.errors`` with the QA report summary and
+    leaves routing to ``_route_after_qa_run`` (which sends the graph to
+    ``END`` rather than into ``deploy`` with a broken artifact).
+    """
+    project_dir = state.authoring.migrator_output_dir
+    if not project_dir:
+        _append_event(state, "qa_run_skipped", "no migrator_output_dir set")
+        return state
+
+    from pathlib import Path
+
+    from rpa_architect.lifecycle.fault_fixer import FixerRegistry
+    from rpa_architect.lifecycle.migrator_qa_fixer import MigratorQAFixer
+    from rpa_architect.lifecycle.migrator_qa_orchestrator import MigratorQALoop
+    from rpa_architect.lifecycle.qa_loop import QALoopRunner
+
+    _append_event(state, "qa_run_started", f"project_dir: {project_dir}")
+
+    try:
+        loop = MigratorQALoop(
+            runner=QALoopRunner(),
+            registry=FixerRegistry([MigratorQAFixer()]),
+        )
+        report = await loop.run(Path(project_dir))
+        if report.passed:
+            state.errors = []
+            _append_event(
+                state,
+                "qa_run_passed",
+                report.summary(),
+                {"iterations": report.iterations, "fixes": len(report.fix_outcomes)},
+            )
+        else:
+            state.errors = [report.summary()]
+            _append_event(
+                state,
+                "qa_run_failed",
+                report.summary(),
+                {"iterations": report.iterations, "fixes": len(report.fix_outcomes)},
+            )
+    except Exception as exc:  # pragma: no cover — defensive; runner already catches
+        logger.exception("QA-loop crashed")
+        state.errors = [f"QA-loop error: {exc}"]
+        _append_event(state, "qa_run_error", str(exc))
+
+    return state
+
+
 async def deploy_node(state: LifecycleState) -> LifecycleState:
     """Deploy the validated project to UiPath Orchestrator."""
     state.phase = LifecyclePhase.DEPLOYING

@@ -17,6 +17,7 @@ from rpa_architect.lifecycle.agent import (
     _route_after_diagnose,
     _route_after_approval,
     _route_after_apply,
+    _route_after_qa_run,
     create_lifecycle_graph,
 )
 
@@ -57,6 +58,29 @@ class TestRouteAfterValidate:
     def test_errors_exhausted_routes_to_deploy(self):
         state = _make_state(errors=["still failing"], iteration=3)
         assert _route_after_validate(state) == "deploy"
+
+    def test_clean_with_migrator_output_routes_to_qa_run(self):
+        """When migrator emitted a project, run the browser QA-loop before deploying."""
+        state = _make_state(errors=[])
+        state.authoring.migrator_output_dir = "/tmp/migrated"
+        assert _route_after_validate(state) == "qa_run"
+
+    def test_dirty_with_migrator_output_still_re_authors(self):
+        """Migrator output doesn't bypass the re-author loop on validation errors."""
+        state = _make_state(errors=["lint"], iteration=1)
+        state.authoring.migrator_output_dir = "/tmp/migrated"
+        assert _route_after_validate(state) == "author"
+
+
+class TestRouteAfterQARun:
+    def test_pass_routes_to_deploy(self):
+        state = _make_state(errors=[])
+        assert _route_after_qa_run(state) == "deploy"
+
+    def test_fail_routes_to_end(self):
+        """Don't ship a broken artifact — bail out so a human can investigate."""
+        state = _make_state(errors=["QA FAILED after 3 iterations"])
+        assert _route_after_qa_run(state) == "__end__"
 
 
 class TestRouteAfterMonitor:
@@ -169,6 +193,7 @@ class TestCreateLifecycleGraph:
         expected = {
             "author",
             "validate_gate",
+            "qa_run",
             "deploy",
             "monitor",
             "diagnose",
@@ -177,3 +202,24 @@ class TestCreateLifecycleGraph:
             "apply_fix",
         }
         assert expected.issubset(node_names)
+
+
+class TestQARunNodePassthrough:
+    """qa_run_node must be a no-op when migrator_output_dir is empty.
+
+    This is the load-bearing invariant for backwards compatibility — every
+    pre-existing test exercises the validate_gate → deploy path through a
+    state with no migrator output, so the new node must not interfere.
+    """
+
+    def test_passthrough_when_no_migrator_output(self):
+        import asyncio
+
+        from rpa_architect.lifecycle.nodes import qa_run_node
+
+        state = _make_state(errors=[])
+        # default authoring.migrator_output_dir == ""
+        result = asyncio.run(qa_run_node(state))
+        assert result.errors == []
+        # Event was logged but no QA loop ran.
+        assert any(e.event_type == "qa_run_skipped" for e in result.history)

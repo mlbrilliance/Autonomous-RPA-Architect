@@ -54,6 +54,9 @@ class HarvestConfig:
     screenshot_dir: Path | None = None
     max_elements_per_page: int = 200
     credential_env_prefix: str = "HARVEST_CRED_"
+    user_data_dir: Path | None = None
+    """If set, Chromium uses ``launch_persistent_context`` so cookies and
+    localStorage persist across runs. Log in once, harvest forever."""
 
 
 @dataclass
@@ -305,18 +308,28 @@ async def harvest_selectors_from_browser(
         for system in web_systems:
             report = BrowserHarvestReport(system_name=system.name)
 
+            browser = None
             try:
-                browser = await pw.chromium.launch(
-                    headless=config.headless,
-                    timeout=config.timeout_ms,
-                )
-                context = await browser.new_context(
-                    viewport={
-                        "width": config.viewport_width,
-                        "height": config.viewport_height,
-                    },
-                )
-                page = await context.new_page()
+                viewport = {
+                    "width": config.viewport_width,
+                    "height": config.viewport_height,
+                }
+                if config.user_data_dir is not None:
+                    config.user_data_dir.mkdir(parents=True, exist_ok=True)
+                    context = await pw.chromium.launch_persistent_context(
+                        user_data_dir=str(config.user_data_dir),
+                        headless=config.headless,
+                        viewport=viewport,
+                        timeout=config.timeout_ms,
+                    )
+                    page = context.pages[0] if context.pages else await context.new_page()
+                else:
+                    browser = await pw.chromium.launch(
+                        headless=config.headless,
+                        timeout=config.timeout_ms,
+                    )
+                    context = await browser.new_context(viewport=viewport)
+                    page = await context.new_page()
 
                 # Navigate to system URL
                 await page.goto(system.url, wait_until="networkidle", timeout=config.timeout_ms)
@@ -368,7 +381,9 @@ async def harvest_selectors_from_browser(
                                 f"{m.element_name}: no match for '{m.action.target}'"
                             )
 
-                await browser.close()
+                await context.close()
+                if browser is not None:
+                    await browser.close()
 
             except Exception as exc:
                 error_msg = f"Browser harvest failed for {system.name}: {exc}"

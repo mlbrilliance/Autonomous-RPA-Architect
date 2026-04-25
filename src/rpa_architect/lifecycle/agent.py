@@ -30,12 +30,28 @@ logger = logging.getLogger(__name__)
 
 
 def _route_after_validate(state: LifecycleState) -> str:
-    """After validation: deploy if clean, else check iteration budget."""
+    """After validation: QA the migrator output (if any), then deploy.
+
+    Topology rules:
+    - clean validation + migrator_output_dir set → ``qa_run`` (browser test)
+    - clean validation + no migrator output → ``deploy`` (legacy passthrough)
+    - dirty validation + budget remaining → ``author`` (regenerate)
+    - dirty validation + budget exhausted → ``deploy`` (best-effort)
+    """
     if not state.errors:
+        if state.authoring.migrator_output_dir:
+            return "qa_run"
         return "deploy"
     if state.iteration < state.max_iterations:
         return "author"  # re-generate with error feedback
     logger.warning("Validation exhausted %d iterations — deploying best result.", state.iteration)
+    return "deploy"
+
+
+def _route_after_qa_run(state: LifecycleState) -> str:
+    """After QA loop: deploy on pass, end on fail (don't ship a broken artifact)."""
+    if state.errors:
+        return END
     return "deploy"
 
 
@@ -87,20 +103,26 @@ def _resolve_fixer_pipeline(
 
     if swarm is not None:
         from rpa_architect.lifecycle.fix_proposal_fixer import FixProposalFixer
+        from rpa_architect.lifecycle.migrator_qa_fixer import MigratorQAFixer
         from rpa_architect.lifecycle.swarm_fault_fixer import SwarmFaultFixer
 
+        # Order: MigratorQAFixer first because its ``can_handle`` is mutex with
+        # SwarmFaultFixer's (xaml_files vs project_dir/main.py). FixProposalFixer
+        # remains the catch-all tail for anything neither claims.
         registry = FixerRegistry(
             [
+                MigratorQAFixer(),
                 SwarmFaultFixer(orchestrator=swarm),
                 FixProposalFixer(project_dir=str(swarm.repo_root)),
             ]
         )
         return registry, swarm.fetcher
 
-    # No-args default: catch-all only, bundle synthesized from state.
+    # No-args default: migrator fixer + catch-all, bundle synthesized from state.
     from rpa_architect.lifecycle.fix_proposal_fixer import FixProposalFixer
+    from rpa_architect.lifecycle.migrator_qa_fixer import MigratorQAFixer
 
-    return FixerRegistry([FixProposalFixer(project_dir="")]), None
+    return FixerRegistry([MigratorQAFixer(), FixProposalFixer(project_dir="")]), None
 
 
 def create_lifecycle_graph(
@@ -135,6 +157,7 @@ def create_lifecycle_graph(
         deploy_node,
         diagnose_node,
         monitor_node,
+        qa_run_node,
         validate_gate_node,
     )
 
@@ -142,6 +165,7 @@ def create_lifecycle_graph(
 
     graph.add_node("author", author_node)
     graph.add_node("validate_gate", validate_gate_node)
+    graph.add_node("qa_run", qa_run_node)
     graph.add_node("deploy", deploy_node)
     graph.add_node("monitor", monitor_node)
     graph.add_node("diagnose", diagnose_node)
@@ -158,7 +182,13 @@ def create_lifecycle_graph(
     graph.add_conditional_edges(
         "validate_gate",
         _route_after_validate,
-        {"deploy": "deploy", "author": "author"},
+        {"deploy": "deploy", "author": "author", "qa_run": "qa_run"},
+    )
+
+    graph.add_conditional_edges(
+        "qa_run",
+        _route_after_qa_run,
+        {"deploy": "deploy", END: END},
     )
 
     graph.add_edge("deploy", "monitor")
