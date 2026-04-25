@@ -1,13 +1,14 @@
 """Tests for lifecycle agent graph construction and routing."""
 
-import pytest
 from datetime import datetime, timedelta
 
 from rpa_architect.lifecycle.state import (
+    AuthoringOutputs,
     DiagnosisResult,
-    LifecyclePhase,
+    FixOutputs,
     LifecycleRequest,
     LifecycleState,
+    MonitoringOutputs,
     MonitoringReport,
 )
 from rpa_architect.lifecycle.agent import (
@@ -23,6 +24,23 @@ from rpa_architect.lifecycle.agent import (
 def _make_state(**overrides) -> LifecycleState:
     req = LifecycleRequest(source="test.pdf", source_type="pdd")
     defaults = dict(request=req, max_iterations=3)
+    # Convenience: lift legacy flat kwargs into their nested sub-records
+    # so existing routing tests stay terse.
+    if "approval_status" in overrides:
+        overrides["fix"] = FixOutputs(approval_status=overrides.pop("approval_status"))
+    monitoring_kwargs: dict = {}
+    for legacy in ("monitoring_report", "diagnosis", "drift_report"):
+        if legacy in overrides:
+            key = "report" if legacy == "monitoring_report" else legacy
+            monitoring_kwargs[key] = overrides.pop(legacy)
+    if monitoring_kwargs:
+        overrides["monitoring"] = MonitoringOutputs(**monitoring_kwargs)
+    authoring_kwargs: dict = {}
+    for legacy in ("ir", "generation_result", "project_dir"):
+        if legacy in overrides:
+            authoring_kwargs[legacy] = overrides.pop(legacy)
+    if authoring_kwargs:
+        overrides["authoring"] = AuthoringOutputs(**authoring_kwargs)
     defaults.update(overrides)
     return LifecycleState(**defaults)
 
@@ -82,7 +100,7 @@ class TestRouteAfterDiagnose:
             recommended_action="fix_code",
         )
         state = _make_state(diagnosis=diag)
-        assert _route_after_diagnose(state) == "propose_fix"
+        assert _route_after_diagnose(state) == "fix"
 
     def test_update_selectors_routes_to_propose(self):
         diag = DiagnosisResult(
@@ -92,7 +110,7 @@ class TestRouteAfterDiagnose:
             recommended_action="update_selectors",
         )
         state = _make_state(diagnosis=diag)
-        assert _route_after_diagnose(state) == "propose_fix"
+        assert _route_after_diagnose(state) == "fix"
 
     def test_escalate_routes_to_end(self):
         diag = DiagnosisResult(
@@ -148,6 +166,14 @@ class TestCreateLifecycleGraph:
         graph = create_lifecycle_graph()
         # Verify the graph has the expected node structure
         node_names = set(graph.get_graph().nodes.keys())
-        expected = {"author", "validate_gate", "deploy", "monitor",
-                    "diagnose", "propose_fix", "approval_gate", "apply_fix"}
+        expected = {
+            "author",
+            "validate_gate",
+            "deploy",
+            "monitor",
+            "diagnose",
+            "fix",
+            "approval_gate",
+            "apply_fix",
+        }
         assert expected.issubset(node_names)

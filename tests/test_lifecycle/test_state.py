@@ -134,9 +134,14 @@ class TestDiagnosisResult:
 
     def test_all_categories(self):
         for cat in [
-            "selector_drift", "data_schema_change", "system_timeout",
-            "credential_expiry", "business_rule_violation", "code_bug",
-            "infrastructure", "unknown",
+            "selector_drift",
+            "data_schema_change",
+            "system_timeout",
+            "credential_expiry",
+            "business_rule_violation",
+            "code_bug",
+            "infrastructure",
+            "unknown",
         ]:
             diag = DiagnosisResult(
                 root_cause="test",
@@ -199,11 +204,21 @@ class TestLifecycleState:
         assert state.history == []
 
     def test_serialization(self):
+        from rpa_architect.lifecycle.state import AuthoringOutputs
+
         req = LifecycleRequest(source="test.pdf", source_type="pdd")
-        state = LifecycleState(request=req, project_dir="/tmp/test")
+        state = LifecycleState(
+            request=req,
+            authoring=AuthoringOutputs(project_dir="/tmp/test"),
+        )
         data = state.model_dump()
         state2 = LifecycleState.model_validate(data)
-        assert state2.project_dir == "/tmp/test"
+        assert state2.authoring.project_dir == "/tmp/test"
+        # Schema-shape regression: legacy flat keys must NOT appear at top level.
+        assert "project_dir" not in data
+        assert "ir" not in data
+        assert "generation_result" not in data
+        assert "authoring" in data
 
 
 class TestLifecycleEvent:

@@ -109,8 +109,7 @@ def generate(
 
     console.print(
         Panel(
-            f"Generating from [bold]{pdd_path.name}[/bold]\n"
-            f"Mode: {mode} | Output: {output_dir}",
+            f"Generating from [bold]{pdd_path.name}[/bold]\nMode: {mode} | Output: {output_dir}",
             title="RPA Architect",
         )
     )
@@ -260,9 +259,7 @@ def build_knowledge_cmd(
         result = _run_async(build_knowledge(str(knowledge_dir)))
 
     if result.get("success"):
-        console.print(
-            f"[green]Indexed {result.get('documents_indexed', 0)} documents.[/green]"
-        )
+        console.print(f"[green]Indexed {result.get('documents_indexed', 0)} documents.[/green]")
     else:
         console.print("[red]Knowledge build failed:[/red]")
         for err in result.get("errors", []):
@@ -366,7 +363,10 @@ def lint_coded_cmd(
         if issues:
             for issue in issues:
                 sev_color = {"error": "red", "warning": "yellow", "info": "blue"}.get(
-                    issue.severity.value if hasattr(issue.severity, "value") else str(issue.severity), "white"
+                    issue.severity.value
+                    if hasattr(issue.severity, "value")
+                    else str(issue.severity),
+                    "white",
                 )
                 console.print(
                     f"  [{sev_color}]{issue.rule_id}[/{sev_color}] "
@@ -487,7 +487,11 @@ def lifecycle_cmd(
     if pdd_path.suffix == ".json":
         source_type = "ir"
 
-    from rpa_architect.lifecycle.state import LifecycleRequest, LifecycleState
+    from rpa_architect.lifecycle.state import (
+        AuthoringOutputs,
+        LifecycleRequest,
+        LifecycleState,
+    )
 
     request = LifecycleRequest(
         source=str(pdd_path),
@@ -499,7 +503,7 @@ def lifecycle_cmd(
 
     initial_state = LifecycleState(
         request=request,
-        project_dir=str(output_dir),
+        authoring=AuthoringOutputs(project_dir=str(output_dir)),
         max_iterations=3,
     )
 
@@ -514,7 +518,9 @@ def lifecycle_cmd(
     )
 
     if dry_run:
-        console.print("[yellow]Dry run — lifecycle graph would execute with the above configuration.[/yellow]")
+        console.print(
+            "[yellow]Dry run — lifecycle graph would execute with the above configuration.[/yellow]"
+        )
         return
 
     from rpa_architect.lifecycle.agent import create_lifecycle_graph
@@ -543,8 +549,10 @@ def lifecycle_cmd(
         console.print(f"[green]Lifecycle completed successfully (phase: {phase})[/green]")
 
     if deployment:
-        console.print(f"\n[bold]Deployment:[/bold] {deployment.get('process_key', 'N/A')} "
-                       f"v{deployment.get('version', '?')} → {deployment.get('folder', '?')}")
+        console.print(
+            f"\n[bold]Deployment:[/bold] {deployment.get('process_key', 'N/A')} "
+            f"v{deployment.get('version', '?')} → {deployment.get('folder', '?')}"
+        )
 
     if history:
         table = Table(title="Lifecycle Events")
@@ -575,9 +583,7 @@ def lifecycle_status_cmd(
     from rpa_architect.lifecycle.monitor import collect_monitoring_report
 
     with console.status(f"Monitoring {process_key}..."):
-        report = _run_async(
-            collect_monitoring_report(process_key, folder, lookback_hours=hours)
-        )
+        report = _run_async(collect_monitoring_report(process_key, folder, lookback_hours=hours))
 
     table = Table(title=f"Monitoring: {process_key}")
     table.add_column("Metric", style="cyan")
@@ -655,9 +661,7 @@ def _do_package(project_dir: Path) -> None:
         result = _run_async(deploy_as_agent(project_dir))
 
     if result.success:
-        console.print(
-            f"[green]Package created:[/green] {result.package_id}"
-        )
+        console.print(f"[green]Package created:[/green] {result.package_id}")
     else:
         console.print("[red]Packaging failed:[/red]")
         for err in result.errors:

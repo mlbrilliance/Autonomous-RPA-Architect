@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from typing import Any
 
 from rpa_architect.lifecycle.state import (
@@ -43,25 +42,27 @@ async def author_node(state: LifecycleState) -> LifecycleState:
 
             result = await generate_from_pdd(
                 state.request.source,
-                state.project_dir or "output",
+                state.authoring.project_dir or "output",
             )
         elif state.request.source_type == "ir":
             from rpa_architect.mcp_server.tools import generate_from_ir
 
-            result = await generate_from_ir(state.request.source, state.project_dir or "output")
+            result = await generate_from_ir(
+                state.request.source, state.authoring.project_dir or "output"
+            )
         else:
             # Natural language: parse as PDD text first
             from rpa_architect.mcp_server.tools import generate_from_pdd
 
             result = await generate_from_pdd(
                 state.request.source,
-                state.project_dir or "output",
+                state.authoring.project_dir or "output",
             )
 
-        state.generation_result = result
+        state.authoring.generation_result = result
         if result.get("success"):
-            state.ir = result.get("ir", state.ir)
-            state.project_dir = result.get("output_dir", state.project_dir)
+            state.authoring.ir = result.get("ir", state.authoring.ir)
+            state.authoring.project_dir = result.get("output_dir", state.authoring.project_dir)
             state.errors = []
             _append_event(
                 state,
@@ -84,12 +85,12 @@ async def author_node(state: LifecycleState) -> LifecycleState:
 async def validate_gate_node(state: LifecycleState) -> LifecycleState:
     """Validate the generated project (Roslyn + XAML lint + structure + tests)."""
     state.phase = LifecyclePhase.VALIDATING
-    _append_event(state, "validation_started", f"Project: {state.project_dir}")
+    _append_event(state, "validation_started", f"Project: {state.authoring.project_dir}")
 
     try:
         from rpa_architect.mcp_server.tools import validate_project
 
-        result = await validate_project(state.project_dir)
+        result = await validate_project(state.authoring.project_dir)
 
         if result.get("valid"):
             state.errors = []
@@ -120,9 +121,9 @@ async def deploy_node(state: LifecycleState) -> LifecycleState:
         from rpa_architect.lifecycle.deployer import deploy_project
 
         deployment = await deploy_project(
-            project_dir=state.project_dir,
+            project_dir=state.authoring.project_dir,
             folder=state.request.deploy_target,
-            ir_snapshot=state.ir,
+            ir_snapshot=state.authoring.ir,
         )
 
         state.deployment = deployment
@@ -155,10 +156,10 @@ async def monitor_node(state: LifecycleState) -> LifecycleState:
             folder=state.deployment.folder,
         )
 
-        state.monitoring_report = report
-        state.diagnosis = None
-        state.fix_proposal = None
-        state.approval_status = "pending"
+        state.monitoring.report = report
+        state.monitoring.diagnosis = None
+        state.fix.outcome = None
+        state.fix.approval_status = "pending"
 
         _append_event(
             state,
@@ -179,18 +180,18 @@ async def monitor_node(state: LifecycleState) -> LifecycleState:
 async def diagnose_node(state: LifecycleState) -> LifecycleState:
     """Diagnose root causes of execution failures."""
     state.phase = LifecyclePhase.DIAGNOSING
-    _append_event(state, "diagnosis_started", f"{state.monitoring_report.faulted} faulted jobs")
+    _append_event(state, "diagnosis_started", f"{state.monitoring.report.faulted} faulted jobs")
 
     try:
         from rpa_architect.lifecycle.diagnosis import diagnose_failures
 
         diagnosis = await diagnose_failures(
-            monitoring_report=state.monitoring_report,
-            ir=state.ir,
-            project_dir=state.project_dir,
+            monitoring_report=state.monitoring.report,
+            ir=state.authoring.ir,
+            project_dir=state.authoring.project_dir,
         )
 
-        state.diagnosis = diagnosis
+        state.monitoring.diagnosis = diagnosis
         _append_event(
             state,
             "diagnosis_complete",
@@ -207,47 +208,28 @@ async def diagnose_node(state: LifecycleState) -> LifecycleState:
     return state
 
 
-async def propose_fix_node(state: LifecycleState) -> LifecycleState:
-    """Generate a fix proposal based on the diagnosis."""
-    _append_event(state, "fix_proposal_started", f"For: {state.diagnosis.category}")
-
-    try:
-        from rpa_architect.lifecycle.fix_proposer import generate_fix_proposal
-
-        proposal = await generate_fix_proposal(
-            diagnosis=state.diagnosis,
-            project_dir=state.project_dir,
-            ir=state.ir,
-        )
-
-        state.fix_proposal = proposal
-        state.approval_status = "pending"
-        _append_event(
-            state,
-            "fix_proposed",
-            f"{proposal.description} ({len(proposal.changes)} changes, risk: {proposal.risk_level})",
-            {"proposal_id": proposal.proposal_id},
-        )
-
-    except Exception as exc:
-        logger.exception("Fix proposal failed")
-        state.errors.append(f"Fix proposal error: {exc}")
-        _append_event(state, "fix_proposal_error", str(exc))
-
-    return state
-
-
 async def approval_gate_node(state: LifecycleState) -> LifecycleState:
-    """Route fix proposal through human approval (Action Center or auto-approve)."""
+    """Route the fix proposal carried on ``last_fix_outcome`` through approval.
+
+    Reads the typed :class:`FixProposal` from ``state.fix.outcome.proposal``;
+    falls back to ``rejected`` when no proposal is attached (e.g. the catch-all
+    ran but ``fix_proposer`` raised mid-flight).
+    """
     state.phase = LifecyclePhase.AWAITING_APPROVAL
+    proposal = state.fix.outcome.proposal if state.fix.outcome else None
+
+    if proposal is None:
+        state.fix.approval_status = "rejected"
+        _append_event(state, "approval_no_proposal", "No proposal attached to outcome")
+        return state
 
     if not state.request.require_approval_for_fixes:
-        state.approval_status = "approved"
+        state.fix.approval_status = "approved"
         _append_event(state, "auto_approved", "Approval not required — auto-approved")
         return state
 
-    if state.fix_proposal and state.fix_proposal.risk_level == "low":
-        state.approval_status = "approved"
+    if proposal.risk_level == "low":
+        state.fix.approval_status = "approved"
         _append_event(state, "auto_approved", "Low-risk fix — auto-approved")
         return state
 
@@ -258,24 +240,28 @@ async def approval_gate_node(state: LifecycleState) -> LifecycleState:
         )
 
         task = await create_review_task(
-            title=f"Fix Proposal: {state.fix_proposal.description}",
+            title=f"Fix Proposal: {proposal.description}",
             data={
-                "proposal_id": state.fix_proposal.proposal_id,
-                "risk_level": state.fix_proposal.risk_level,
-                "changes": [c.model_dump() for c in state.fix_proposal.changes],
-                "diagnosis": state.diagnosis.model_dump() if state.diagnosis else {},
+                "proposal_id": proposal.proposal_id,
+                "risk_level": proposal.risk_level,
+                "changes": [c.model_dump() for c in proposal.changes],
+                "diagnosis": state.monitoring.diagnosis.model_dump()
+                if state.monitoring.diagnosis
+                else {},
             },
         )
 
         _append_event(state, "approval_requested", f"Action Center task: {task.task_id}")
 
         result = await wait_for_task_completion(task.task_id)
-        state.approval_status = "approved" if result.status == "Completed" else "rejected"
-        _append_event(state, f"approval_{state.approval_status}", f"Task {task.task_id}: {result.status}")
+        state.fix.approval_status = "approved" if result.status == "Completed" else "rejected"
+        _append_event(
+            state, f"approval_{state.fix.approval_status}", f"Task {task.task_id}: {result.status}"
+        )
 
     except Exception as exc:
         logger.exception("Approval gate error")
-        state.approval_status = "rejected"
+        state.fix.approval_status = "rejected"
         state.errors.append(f"Approval error: {exc}")
         _append_event(state, "approval_error", str(exc))
 
@@ -283,16 +269,23 @@ async def approval_gate_node(state: LifecycleState) -> LifecycleState:
 
 
 async def apply_fix_node(state: LifecycleState) -> LifecycleState:
-    """Apply the approved fix proposal and re-enter the validation loop."""
+    """Apply the approved proposal carried on ``last_fix_outcome``."""
     state.phase = LifecyclePhase.FIXING
-    _append_event(state, "fix_started", f"Applying {len(state.fix_proposal.changes)} changes")
+    proposal = state.fix.outcome.proposal if state.fix.outcome else None
+
+    if proposal is None:
+        state.errors.append("apply_fix: no proposal on last_fix_outcome")
+        _append_event(state, "fix_apply_error", "no proposal to apply")
+        return state
+
+    _append_event(state, "fix_started", f"Applying {len(proposal.changes)} changes")
 
     try:
         from rpa_architect.lifecycle.fix_proposer import apply_fix
 
         await apply_fix(
-            fix_proposal=state.fix_proposal,
-            project_dir=state.project_dir,
+            fix_proposal=proposal,
+            project_dir=state.authoring.project_dir,
         )
 
         state.iteration += 1

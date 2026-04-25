@@ -5,9 +5,12 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from rpa_architect.lifecycle.fault_fixer import FixOutcome
 
 
 class LifecyclePhase(str, Enum):
@@ -50,8 +53,12 @@ class DeploymentRecord(BaseModel):
     release_key: str = Field(description="UiPath release key.")
     package_id: str = Field(description="Published package identifier.")
     folder: str = Field(description="Orchestrator folder where deployed.")
-    deployed_at: datetime = Field(default_factory=datetime.utcnow, description="Deployment timestamp.")
-    ir_snapshot: dict[str, Any] = Field(default_factory=dict, description="IR snapshot at deploy time.")
+    deployed_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Deployment timestamp."
+    )
+    ir_snapshot: dict[str, Any] = Field(
+        default_factory=dict, description="IR snapshot at deploy time."
+    )
     version: str = Field(default="1.0.0", description="Package version.")
 
 
@@ -63,7 +70,9 @@ class ExecutionLog(BaseModel):
     started_at: datetime = Field(description="Job start timestamp.")
     ended_at: datetime | None = Field(default=None, description="Job end timestamp.")
     info: str = Field(default="", description="Job info or error message.")
-    robot_logs: list[dict[str, Any]] = Field(default_factory=list, description="Robot execution log entries.")
+    robot_logs: list[dict[str, Any]] = Field(
+        default_factory=list, description="Robot execution log entries."
+    )
 
 
 class MonitoringReport(BaseModel):
@@ -78,7 +87,9 @@ class MonitoringReport(BaseModel):
     success_rate: float = Field(default=1.0, ge=0.0, le=1.0, description="Success rate (0.0-1.0).")
     avg_duration_seconds: float = Field(default=0.0, ge=0.0, description="Average job duration.")
     failed_jobs: list[ExecutionLog] = Field(default_factory=list, description="Failed job details.")
-    errors_by_type: dict[str, int] = Field(default_factory=dict, description="Error type distribution.")
+    errors_by_type: dict[str, int] = Field(
+        default_factory=dict, description="Error type distribution."
+    )
     verdicts_by_category: dict[str, int] = Field(
         default_factory=dict,
         description=(
@@ -104,7 +115,9 @@ class DiagnosisResult(BaseModel):
         "extraction_quality",
         "unknown",
     ] = Field(description="Root cause classification.")
-    affected_files: list[str] = Field(default_factory=list, description="Files affected by the issue.")
+    affected_files: list[str] = Field(
+        default_factory=list, description="Files affected by the issue."
+    )
     confidence: float = Field(ge=0.0, le=1.0, description="Diagnosis confidence (0.0-1.0).")
     recommended_action: Literal[
         "fix_code",
@@ -132,12 +145,18 @@ class ProposedChange(BaseModel):
 class FixProposal(BaseModel):
     """A proposed set of changes to fix diagnosed issues."""
 
-    proposal_id: str = Field(default_factory=lambda: uuid.uuid4().hex[:12], description="Unique proposal ID.")
+    proposal_id: str = Field(
+        default_factory=lambda: uuid.uuid4().hex[:12], description="Unique proposal ID."
+    )
     diagnosis_ref: str = Field(default="", description="Category reference from DiagnosisResult.")
     description: str = Field(description="Summary of the proposed fix.")
-    changes: list[ProposedChange] = Field(default_factory=list, description="Ordered changes to apply.")
+    changes: list[ProposedChange] = Field(
+        default_factory=list, description="Ordered changes to apply."
+    )
     risk_level: Literal["low", "medium", "high"] = Field(description="Assessed risk level.")
-    requires_redeployment: bool = Field(default=True, description="Whether fix requires redeployment.")
+    requires_redeployment: bool = Field(
+        default=True, description="Whether fix requires redeployment."
+    )
     test_plan: list[str] = Field(default_factory=list, description="Validation test cases.")
 
 
@@ -145,7 +164,9 @@ class DriftReport(BaseModel):
     """Report of behavioral drift in a deployed process."""
 
     process_key: str = Field(description="Process exhibiting drift.")
-    detected_at: datetime = Field(default_factory=datetime.utcnow, description="Detection timestamp.")
+    detected_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Detection timestamp."
+    )
     drift_type: Literal[
         "success_rate_decline",
         "duration_increase",
@@ -171,7 +192,9 @@ class FailureBundle(BaseModel):
     process_key: str = Field(description="Release / process name.")
     release_key: str = Field(default="", description="Release key (distinct from process_key).")
     state: str = Field(description="Job state: Faulted, Stopped, etc.")
-    exception_message: str = Field(default="", description="Top-level exception message from Job.Info.")
+    exception_message: str = Field(
+        default="", description="Top-level exception message from Job.Info."
+    )
     exception_type: str = Field(
         default="",
         description=(
@@ -193,12 +216,23 @@ class FailureBundle(BaseModel):
         description="Orchestrator storage paths to screenshot artifacts, if any.",
     )
     folder: str = Field(default="Default", description="Orchestrator folder name.")
+    project_dir: str = Field(
+        default="",
+        description=(
+            "Local project directory the failed job was deployed from. "
+            "Set by ``fix_node._synthesize_bundle`` for the no-fetcher path so "
+            "``FixProposalFixer`` can enumerate ``.objects/``, ``Data/Config.xlsx``, "
+            "etc. at call time rather than relying on a constructor-time path."
+        ),
+    )
 
 
 class XamlPatch(BaseModel):
     """A single in-place edit to a XAML file in a FailureBundle."""
 
-    file_path: str = Field(description="Relative path within the deployed package (e.g. Main.xaml).")
+    file_path: str = Field(
+        description="Relative path within the deployed package (e.g. Main.xaml)."
+    )
     target_xpath: str = Field(description="lxml-style xpath of the element to edit.")
     attribute: str = Field(description="Attribute name being rewritten (e.g. Selector).")
     old_value: str = Field(description="Value before patching.")
@@ -209,10 +243,14 @@ class XamlPatch(BaseModel):
 class FixCandidate(BaseModel):
     """One specialist's proposed repair for a FailureBundle."""
 
-    specialist: str = Field(description="Name of the specialist agent (selector_repair, null, timing, business_rule).")
+    specialist: str = Field(
+        description="Name of the specialist agent (selector_repair, null, timing, business_rule)."
+    )
     confidence: float = Field(ge=0.0, le=1.0, description="Specialist's self-assessed confidence.")
     diagnosis_category: str = Field(description="DiagnosisResult.category value.")
-    patches: list[XamlPatch] = Field(default_factory=list, description="XAML edits this candidate proposes.")
+    patches: list[XamlPatch] = Field(
+        default_factory=list, description="XAML edits this candidate proposes."
+    )
     reasoning: str = Field(default="", description="Human-readable justification.")
     patched_xaml: dict[str, str] = Field(
         default_factory=dict,
@@ -241,32 +279,98 @@ class LifecycleEvent(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class MonitoringOutputs(BaseModel):
+    """Phase-scoped outputs of monitoring + diagnosis + drift detection.
+
+    Groups the three observation artefacts so readers don't bounce across
+    top-level state fields. ``drift_report`` is included even though no
+    caller populates it yet — the future ``DriftRemediator`` (sibling to
+    ``FaultFixer``, see CONTEXT.md) will own that write.
+    """
+
+    report: MonitoringReport | None = Field(
+        default=None,
+        description="Latest monitoring window aggregate.",
+    )
+    diagnosis: DiagnosisResult | None = Field(
+        default=None,
+        description="Root-cause diagnosis for the failures in ``report``.",
+    )
+    drift_report: DriftReport | None = Field(
+        default=None,
+        description="Behavioural-drift report; populated by the drift detector.",
+    )
+
+
+class FixOutputs(BaseModel):
+    """Phase-scoped outputs of the fault-fix branch.
+
+    Groups everything ``fix_node`` and the human-approval gate produce so
+    readers don't bounce across top-level state fields. Sibling to
+    ``MonitoringOutputs`` and ``AuthoringOutputs``.
+    """
+
+    model_config = {"arbitrary_types_allowed": True}
+
+    outcome: FixOutcome | None = Field(
+        default=None,
+        description="Outcome of the most recent FaultFixer run; None before any heal is attempted.",
+    )
+    history: list[FixOutcome] = Field(
+        default_factory=list,
+        description="Every FixOutcome produced this lifecycle run, in chronological order.",
+    )
+    approval_status: Literal["pending", "approved", "rejected"] = Field(
+        default="pending",
+        description="Human-approval gate status for the current outcome's proposal.",
+    )
+
+
+class AuthoringOutputs(BaseModel):
+    """Phase-scoped outputs of the authoring + codegen branch.
+
+    Groups everything ``author_node`` produces — the lifted IR, the raw
+    generation result dict, and the on-disk project root — so downstream
+    nodes (``validate_gate_node``, ``deploy_node``, ``diagnose_node``,
+    ``apply_fix_node``, ``fix_node`` synthesis path) read from one
+    sub-record instead of three top-level fields.
+    """
+
+    ir: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Lifted ProcessIR dict (post-codegen).",
+    )
+    generation_result: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Raw output of ``generate_from_pdd`` / ``generate_from_ir`` — files, errors, output_dir.",
+    )
+    project_dir: str = Field(
+        default="",
+        description="Local project directory (caller-supplied or filled in by the codegen pipeline).",
+    )
+
+
 class LifecycleState(BaseModel):
     """Shared state for the lifecycle LangGraph agent."""
 
+    model_config = {"arbitrary_types_allowed": True}
+
     request: LifecycleRequest
-    ir: dict[str, Any] = Field(default_factory=dict)
-    generation_result: dict[str, Any] = Field(default_factory=dict)
-    project_dir: str = ""
+    authoring: AuthoringOutputs = Field(default_factory=AuthoringOutputs)
     deployment: DeploymentRecord | None = None
-    monitoring_report: MonitoringReport | None = None
-    diagnosis: DiagnosisResult | None = None
-    fix_proposal: FixProposal | None = None
-    drift_report: DriftReport | None = None
-    approval_status: Literal["pending", "approved", "rejected"] = "pending"
+    monitoring: MonitoringOutputs = Field(default_factory=MonitoringOutputs)
     phase: LifecyclePhase = LifecyclePhase.AUTHORING
     iteration: int = 0
     max_iterations: int = 3
     errors: list[str] = Field(default_factory=list)
     history: list[LifecycleEvent] = Field(default_factory=list)
-    # Populated by the Self-Healing Swarm node when a faulted job was auto-patched.
-    # None when swarm is disabled or no heal was attempted. Carries the PR URL
-    # so downstream nodes can reference the opened fix.
-    swarm_pr_url: str = Field(
-        default="",
-        description="GitHub PR URL opened by the Self-Healing Swarm for this iteration.",
-    )
-    swarm_requires_escalation: bool = Field(
-        default=False,
-        description="Swarm attempted heal but requires human review (no actionable candidate or staging failed).",
-    )
+    fix: FixOutputs = Field(default_factory=FixOutputs)
+
+
+# Resolve forward refs after fault_fixer.FixOutcome is importable.
+# Done at module bottom because fault_fixer imports FailureBundle from this module —
+# defining FixOutcome inline would create a circular import at module-load time.
+from rpa_architect.lifecycle.fault_fixer import FixOutcome  # noqa: E402
+
+FixOutputs.model_rebuild()
+LifecycleState.model_rebuild()

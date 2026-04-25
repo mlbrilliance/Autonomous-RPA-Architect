@@ -1,11 +1,17 @@
 """LangGraph lifecycle agent: author → deploy → monitor → diagnose → fix loop.
 
-With Task #5 the graph gains an optional Self-Healing Swarm branch. When
-:func:`create_lifecycle_graph` is called without a swarm, the topology is
-unchanged — the existing 1119 tests stay green. When called with a
-``SwarmOrchestrator``, a new ``swarm_heal`` node runs after ``diagnose``
-and either opens a PR (short-circuiting the propose_fix branch) or
-escalates to the existing approval gate.
+The fault-fix branch is driven by a :class:`FixerRegistry`. Three call shapes:
+
+- ``create_lifecycle_graph(swarm=…)`` — legacy. Builds
+  ``[SwarmFaultFixer, FixProposalFixer]`` and reuses ``swarm.fetcher``.
+- ``create_lifecycle_graph(fixer_registry=…, fetcher=…)`` — caller
+  controls the full pipeline.
+- ``create_lifecycle_graph()`` — defaults to ``[FixProposalFixer]`` with
+  no fetcher; ``fix_node`` synthesizes a lean :class:`FailureBundle` from
+  ``state.monitoring.report.failed_jobs[0]``.
+
+Lifecycle routing reads ``state.fix.outcome`` — adapters do not
+populate adapter-specific fields on ``LifecycleState``.
 """
 
 from __future__ import annotations
@@ -15,6 +21,8 @@ import logging
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
+from rpa_architect.lifecycle.fault_fixer import FixerRegistry
+from rpa_architect.lifecycle.fix_node import FailureBundleFetcherLike
 from rpa_architect.lifecycle.state import LifecycleState
 from rpa_architect.lifecycle.swarm.graph import SwarmOrchestrator
 
@@ -33,23 +41,23 @@ def _route_after_validate(state: LifecycleState) -> str:
 
 def _route_after_monitor(state: LifecycleState) -> str:
     """After monitoring: diagnose failures, or end if healthy."""
-    report = state.monitoring_report
+    report = state.monitoring.report
     if report and report.faulted > 0:
         return "diagnose"
     return END
 
 
 def _route_after_diagnose(state: LifecycleState) -> str:
-    """After diagnosis: propose fix or escalate to human."""
-    diag = state.diagnosis
+    """After diagnosis: hand to fix_node, or end if no fix is recommended."""
+    diag = state.monitoring.diagnosis
     if diag and diag.recommended_action in ("fix_code", "update_selectors", "update_config"):
-        return "propose_fix"
+        return "fix"
     return END  # escalate / no_action / retry — lifecycle ends, human takes over
 
 
 def _route_after_approval(state: LifecycleState) -> str:
     """After approval gate: apply fix if approved, otherwise end."""
-    if state.approval_status == "approved":
+    if state.fix.approval_status == "approved":
         return "apply_fix"
     return END
 
@@ -61,17 +69,45 @@ def _route_after_apply(state: LifecycleState) -> str:
     return END
 
 
-def _route_after_swarm(state: LifecycleState) -> str:
-    """After swarm: PR opened → END; escalation → propose_fix; error → END."""
-    if state.swarm_pr_url:
-        return END
-    if state.swarm_requires_escalation:
-        return "propose_fix"
-    return END
+def _resolve_fixer_pipeline(
+    swarm: SwarmOrchestrator | None,
+    fixer_registry: FixerRegistry | None,
+    fetcher: FailureBundleFetcherLike | None,
+) -> tuple[FixerRegistry, FailureBundleFetcherLike | None]:
+    """Choose the fixer registry + bundle fetcher for the lifecycle graph.
+
+    Three valid call shapes (see module docstring). Mixing ``swarm`` with
+    ``fixer_registry`` is rejected to keep wiring deterministic.
+    """
+    if fixer_registry is not None and swarm is not None:
+        raise ValueError("Pass either `swarm=` or `fixer_registry=`, not both.")
+
+    if fixer_registry is not None:
+        return fixer_registry, fetcher  # fetcher may be None — fix_node synthesizes
+
+    if swarm is not None:
+        from rpa_architect.lifecycle.fix_proposal_fixer import FixProposalFixer
+        from rpa_architect.lifecycle.swarm_fault_fixer import SwarmFaultFixer
+
+        registry = FixerRegistry(
+            [
+                SwarmFaultFixer(orchestrator=swarm),
+                FixProposalFixer(project_dir=str(swarm.repo_root)),
+            ]
+        )
+        return registry, swarm.fetcher
+
+    # No-args default: catch-all only, bundle synthesized from state.
+    from rpa_architect.lifecycle.fix_proposal_fixer import FixProposalFixer
+
+    return FixerRegistry([FixProposalFixer(project_dir="")]), None
 
 
 def create_lifecycle_graph(
     swarm: SwarmOrchestrator | None = None,
+    *,
+    fixer_registry: FixerRegistry | None = None,
+    fetcher: FailureBundleFetcherLike | None = None,
 ) -> CompiledStateGraph:
     """Build and compile the lifecycle agent graph.
 
@@ -81,14 +117,17 @@ def create_lifecycle_graph(
                                  │                               │
                                  └─(errors, budget)──→ author    └─(faulted)──→ diagnose
                                  └─(errors, exhausted)→ deploy        │
-                                                                 propose_fix → approval_gate
-                                                                      │              │
-                                                                      │       ┌──(approved)
-                                                                      │       │
-                                                                 apply_fix ←──┘
-                                                                      │
-                                                               validate_gate (loop)
+                                                                      fix ─┬─(success+pr)──→ END
+                                                                           │
+                                                                           └─(escalate)──→ approval_gate
+                                                                                                │
+                                                                                          ┌──(approved)
+                                                                                          │
+                                                                                     apply_fix ←──┘
+                                                                                          │
+                                                                                   validate_gate (loop)
     """
+    from rpa_architect.lifecycle.fix_node import build_fix_node, route_after_fix
     from rpa_architect.lifecycle.nodes import (
         apply_fix_node,
         approval_gate_node,
@@ -96,7 +135,6 @@ def create_lifecycle_graph(
         deploy_node,
         diagnose_node,
         monitor_node,
-        propose_fix_node,
         validate_gate_node,
     )
 
@@ -107,9 +145,11 @@ def create_lifecycle_graph(
     graph.add_node("deploy", deploy_node)
     graph.add_node("monitor", monitor_node)
     graph.add_node("diagnose", diagnose_node)
-    graph.add_node("propose_fix", propose_fix_node)
     graph.add_node("approval_gate", approval_gate_node)
     graph.add_node("apply_fix", apply_fix_node)
+
+    registry, fix_fetcher = _resolve_fixer_pipeline(swarm, fixer_registry, fetcher)
+    graph.add_node("fix", build_fix_node(registry=registry, fetcher=fix_fetcher))
 
     graph.set_entry_point("author")
 
@@ -129,30 +169,17 @@ def create_lifecycle_graph(
         {"diagnose": "diagnose", END: END},
     )
 
-    if swarm is not None:
-        from rpa_architect.lifecycle.swarm.node import build_swarm_node
+    graph.add_conditional_edges(
+        "diagnose",
+        _route_after_diagnose,
+        {"fix": "fix", END: END},
+    )
 
-        graph.add_node("swarm_heal", build_swarm_node(swarm))
-        graph.add_conditional_edges(
-            "diagnose",
-            lambda s: "swarm_heal"
-            if (s.diagnosis and s.diagnosis.recommended_action in ("fix_code", "update_selectors", "update_config"))
-            else END,
-            {"swarm_heal": "swarm_heal", END: END},
-        )
-        graph.add_conditional_edges(
-            "swarm_heal",
-            _route_after_swarm,
-            {"propose_fix": "propose_fix", END: END},
-        )
-    else:
-        graph.add_conditional_edges(
-            "diagnose",
-            _route_after_diagnose,
-            {"propose_fix": "propose_fix", END: END},
-        )
-
-    graph.add_edge("propose_fix", "approval_gate")
+    graph.add_conditional_edges(
+        "fix",
+        route_after_fix,
+        {"approval_gate": "approval_gate", END: END},
+    )
 
     graph.add_conditional_edges(
         "approval_gate",
