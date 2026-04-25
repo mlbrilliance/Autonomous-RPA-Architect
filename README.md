@@ -9,7 +9,7 @@
 [![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-1C3C3C?style=for-the-badge&logo=langgraph&logoColor=white)](https://langchain-ai.github.io/langgraph/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 [![Playwright](https://img.shields.io/badge/Playwright-Harvesting-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)](https://playwright.dev/)
-[![Tests](https://img.shields.io/badge/Tests-1119%20Passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-1320%20Passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 [![UiPath Studio](https://img.shields.io/badge/UiPath-Studio%2025.10-FA4616?style=for-the-badge&logo=uipath&logoColor=white)](https://docs.uipath.com)
 [![Generators](https://img.shields.io/badge/Generators-96-blue?style=for-the-badge)](src/rpa_architect/generators/)
 [![Lint Rules](https://img.shields.io/badge/Lint%20Rules-25-orange?style=for-the-badge)](src/rpa_architect/xaml_lint/)
@@ -27,6 +27,64 @@ _Author → Deploy → Monitor → Diagnose → Fix — the full lifecycle, in a
 [Quick Start](#-quick-start) · [Lifecycle Agent](#-autonomous-lifecycle-agent) · [Browser Harvesting](#-live-browser-selector-harvesting) · [Maestro Workflows](#-uipath-maestro-workflow-generation) · [Domain Packs](#-vertical-domain-packs) · [Architecture](#-architecture) · [Configuration](#%EF%B8%8F-configuration)
 
 </div>
+
+---
+
+## What's New in v0.8.0 — Browser QA-Loop + Persistent Profile Harness
+
+v0.7 emitted a runnable Python+Playwright project from XAML but stopped short of running it. v0.8 closes that loop: after the migrator emits, the lifecycle agent now **runs the artifact against the live target, captures Playwright failures, auto-patches, and retries** — the same build → test → fix → retest pattern Playwright-CLI users drive by hand, but wired into the existing `FaultFixer` Protocol so it composes with the v0.7 self-healing swarm.
+
+<table>
+<tr>
+<td width="50%">
+
+**`BrowserSession` — persistent profile harness** — Single async context manager (`rpa_architect.selectors.browser_session`) wraps `async_playwright()` with two modes: ephemeral (`pw.chromium.launch()` — today's harvest behavior) or persistent (`pw.chromium.launch_persistent_context(user_data_dir=…)` — cookies, localStorage, IndexedDB, service workers all survive across runs). Headed-by-default to match interactive iteration; `RPA_HEADLESS=1` flips to headless for CI without code changes. `RPA_USER_DATA_DIR=/path` enables persistence the same way. `BrowserHarvester.HarvestConfig` gained the same field, so harvest runs against Odoo / SuiteCRM / Orchestrator UI can finally skip re-login. Migrator-emitted `main.py` consumes the same env vars (no `rpa_architect` import — the generated project stays standalone).
+
+</td>
+<td width="50%">
+
+**`MigratorQAFixer` — sister to `SwarmFaultFixer`** — Implements the existing `FaultFixer` Protocol (`lifecycle/fault_fixer.py`), claims python+playwright artifacts (`failure.xaml_files` empty + `project_dir/main.py` exists — mutex with `SwarmFaultFixer` which owns the XAML lane). Two narrow remediations: `TimeoutException` bumps every `timeout=N` kwarg in `processes/*.py` by +5 s (capped at 30 s) via atomic temp-file + `os.replace`; `SelectorNotFoundException` escalates with structured pointers to the offending files (re-harvesting needs a target URL the fix layer doesn't always have). Regex matches inside `await page.…(…)` calls only — comments, docstrings, and string literals containing `timeout=…` are left alone. Registered ahead of `SwarmFaultFixer` in `_resolve_fixer_pipeline`; `FixProposalFixer` remains the catch-all tail.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**`QALoopRunner` + `MigratorQALoop`** — `QALoopRunner` (`lifecycle/qa_loop.py`) executes `python main.py` from a migrator-emitted project in an `asyncio.create_subprocess_exec` (clean isolation; the emitted project depends only on Playwright, not on `rpa_architect`). On non-zero exit, parses the traceback and maps it to the same `exception_type` strings `FixProposalFixer._EXCEPTION_TYPE_MAP` already uses (`TimeoutException`, `SelectorNotFoundException`, `NullReferenceException`, …) so a single convention drives both fix paths. `MigratorQALoop` (`lifecycle/migrator_qa_orchestrator.py`) drives runner → registry → runner with a bounded budget (default 3 iterations); stops on pass, on escalation, or budget-exhausted. Same primitives as the LangGraph fix branch (`FixerRegistry`, `FailureBundle`, `FixOutcome`) — just orchestrated for the migrator-output domain.
+
+</td>
+<td width="50%">
+
+**LangGraph integration — `qa_run` stage** — New `qa_run_node` sits between `validate_gate` and `deploy`, gated on `state.authoring.migrator_output_dir`. When set: runs `MigratorQALoop`, populates `state.errors` with the report summary; conditional edges route pass → `deploy`, fail → `END` (don't ship a broken artifact). When empty (the default): no-op passthrough, so all 184 pre-existing lifecycle tests + the v0.7 baseline pass unchanged. The QA loop is intentionally NOT plugged into the diagnose/fix loop — `MigratorQALoop` already has its own internal retry budget; looping again at the graph level would just multiply iterations.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Demo — `proof/demo_qa_loop.py`** — Self-contained: stdlib HTTP server with a button injected after 4 s, real `emit_project()` output (XAML → IR → Python+Playwright), `processes/*.py` post-emit-patched with a deliberately tight `timeout=1500` to force iteration 1 to fail, `MigratorQAFixer` bumps to 6500 ms, iteration 2 passes. Mirrors the YouTube Playwright-CLI workflow applied to this repo's actual subject (UiPath migration), not a generic form demo. `--headless` flag for CI, `--keep` to inspect the generated project.
+
+</td>
+<td width="50%">
+
+**Skill pack — `.claude/skills/browser-qa-loop/`** — Documents the four primitives (`BrowserSession` / `QALoopRunner` / `MigratorQAFixer` / `MigratorQALoop`), the headed-by-default rationale, the `RPA_USER_DATA_DIR` persistent-profile recipe, and the failure-bundle exception-type conventions shared with `FixProposalFixer`. Sister to the existing `uipath-community-cloud-gotchas` and `reframework-coded-workflow` skills — short, opinionated, AI-navigable. Reviewed mid-implementation by GLM 5.1 (per the project's mandatory multi-model deliberation rule); three issues caught and fixed with regression tests before commit.
+
+</td>
+</tr>
+</table>
+
+### What's actually running
+
+| Capability | v0.7 | v0.8 |
+|---|---|---|
+| Persistent Chromium profile (`launch_persistent_context`) — log in once, reuse forever | — | ✅ `BrowserSession` |
+| Headed-by-default for dev, headless for CI via single env toggle (`RPA_HEADLESS`) | — | ✅ harness + emitted main.py + parity tests |
+| Run migrator output → capture failure → autopatch → retry | — | ✅ 3-iter bounded loop |
+| `FaultFixer` for python+playwright artifacts (timeout bump, selector escalation) | — | ✅ `MigratorQAFixer` |
+| `qa_run` stage in lifecycle graph between validate and deploy | — | ✅ passthrough-when-empty |
+| Atomic file writes + regex-safe rewrites (no comment/string corruption) | — | ✅ |
+| End-to-end demo of build → test → fix → retest | — | ✅ `proof/demo_qa_loop.py` (<60 s) |
+| Total tests | 1310 | **1320** |
 
 ---
 
